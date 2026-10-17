@@ -1,0 +1,143 @@
+import { useRef, useState } from 'react'
+import { useStore } from '../store'
+import { TopBar, Segmented, Switch, Field, NumInput } from '../ui'
+import { ILink, IDownload, IUpload, ITrash } from '../icons'
+import { deliver } from '../export'
+import { BrandFull } from '../Brand'
+import type { Data, Settings as S } from '../types'
+
+export default function Settings() {
+  const { data, dispatch } = useStore()
+  const st = data.settings
+  const set = (s: Partial<S>) => dispatch({ t: 'settings', s })
+  const [msg, setMsg] = useState('')
+  const [confirmDemo, setConfirmDemo] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
+  const hasDemo = data.sessions.some((s) => s.demo) || data.players.some((p) => p.demo)
+  const url = typeof location !== 'undefined' ? location.origin + location.pathname : ''
+
+  async function shareApp() {
+    const text = 'Registrá tus patadas a los palos y mirá desde dónde acertás más:'
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'A los Palos', text, url })
+        return
+      }
+    } catch (e) {
+      if ((e as Error).name === 'AbortError') return
+    }
+    try {
+      await navigator.clipboard.writeText(`${text} ${url}`)
+      setMsg('Link copiado.')
+    } catch {
+      setMsg(`Copiá este link: ${url}`)
+    }
+  }
+
+  async function backup() {
+    const blob = new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' })
+    const d = new Date()
+    const r = await deliver(blob, `alospalos_backup_${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}.json`)
+    if (r === 'failed') setMsg('No se pudo guardar la copia en esta vista.')
+  }
+
+  function restore(file: File) {
+    const r = new FileReader()
+    r.onload = () => {
+      try {
+        const d = JSON.parse(String(r.result)) as Data
+        if (!Array.isArray(d.kicks) || !Array.isArray(d.sessions) || !Array.isArray(d.players)) throw new Error('formato')
+        dispatch({ t: 'replace', d })
+        setMsg(`Copia cargada: ${d.sessions.length} sesiones, ${d.kicks.length} patadas.`)
+      } catch {
+        setMsg('Ese archivo no es una copia de A los Palos.')
+      }
+    }
+    r.readAsText(file)
+  }
+
+  return (
+    <div className="screen">
+      <TopBar title="Ajustes" />
+      <main className="content form">
+        <div className="group">
+          <span className="group-label">Apariencia</span>
+          <Segmented<S['theme']>
+            label="Tema"
+            value={st.theme}
+            onChange={(theme) => set({ theme })}
+            options={[
+              { value: 'system', label: 'Sistema' },
+              { value: 'light', label: 'Claro' },
+              { value: 'dark', label: 'Oscuro' },
+            ]}
+          />
+        </div>
+
+        <div className="group">
+          <span className="group-label">Puntos</span>
+          <Switch label="Mostrar puntos perdidos" hint="Suma lo que se dejó de meter en partido por patadas erradas." checked={st.showWasted} onChange={(showWasted) => set({ showWasted })} />
+          <Switch label="Contar puntos en amistosos" hint="Si está apagado, solo suman los partidos." checked={st.pointsInFriendlies} onChange={(pointsInFriendlies) => set({ pointsInFriendlies })} />
+        </div>
+
+        <div className="group">
+          <span className="group-label">Cancha por defecto</span>
+          <div className="row3">
+            <Field label="Largo" suffix="m">
+              <NumInput id="st-len" value={st.defaultPitch.length} onChange={(v) => v && set({ defaultPitch: { ...st.defaultPitch, length: v } })} />
+            </Field>
+            <Field label="Ancho" suffix="m">
+              <NumInput id="st-wid" value={st.defaultPitch.width} onChange={(v) => v && set({ defaultPitch: { ...st.defaultPitch, width: v } })} />
+            </Field>
+            <Field label="Entre palos" suffix="m">
+              <NumInput id="st-gap" value={st.defaultPitch.postGap} onChange={(v) => v && set({ defaultPitch: { ...st.defaultPitch, postGap: v } })} />
+            </Field>
+          </div>
+        </div>
+
+        <div className="group">
+          <span className="group-label">Compartir</span>
+          <button className="list-btn" onClick={shareApp}>
+            <ILink /> Pasarle la app a alguien
+          </button>
+        </div>
+
+        <div className="group">
+          <span className="group-label">Tus datos</span>
+          <p className="hint">Por ahora todo se guarda en este celular. Hacé una copia de vez en cuando hasta que estén las cuentas.</p>
+          <button className="list-btn" onClick={backup}>
+            <IDownload /> Guardar copia de seguridad
+          </button>
+          <button className="list-btn" onClick={() => fileRef.current?.click()}>
+            <IUpload /> Cargar una copia
+          </button>
+          <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={(e) => e.target.files?.[0] && restore(e.target.files[0])} />
+          {hasDemo &&
+            (confirmDemo ? (
+              <div className="confirm inline">
+                <span>¿Borrar los datos de ejemplo?</span>
+                <button className="btn-text" onClick={() => setConfirmDemo(false)}>
+                  No
+                </button>
+                <button className="btn-danger" onClick={() => (dispatch({ t: 'clearDemo' }), setConfirmDemo(false))}>
+                  Borrar
+                </button>
+              </div>
+            ) : (
+              <button className="list-btn danger" onClick={() => setConfirmDemo(true)}>
+                <ITrash /> Borrar datos de ejemplo
+              </button>
+            ))}
+          {msg && <p className="status">{msg}</p>}
+        </div>
+
+        <BrandFull />
+        <p className="about">
+          A los Palos · versión 0.2
+          <br />
+          {data.sessions.length} sesiones · {data.kicks.length} patadas · {data.players.length} pateadores
+        </p>
+      </main>
+    </div>
+  )
+}
