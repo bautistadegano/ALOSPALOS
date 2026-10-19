@@ -16,6 +16,23 @@ const defaultSettings: Settings = {
   v: 2,
 }
 
+/** Cada cuenta es una sola persona: junta todos los pateadores reales en uno ("yo"). */
+function ensureMe(d: Data): Data {
+  const real = d.players.filter((p) => !p.demo)
+  if (!real.length) return { ...d, settings: { ...d.settings, meId: undefined } }
+  const pick =
+    real.find((p) => p.id === d.settings.meId) ?? real.find((p) => p.id === d.settings.lastPlayerId) ?? real[0]
+  const others = new Set(real.filter((p) => p.id !== pick.id).map((p) => p.id))
+  if (!others.size && d.settings.meId === pick.id) return d
+  return {
+    ...d,
+    players: d.players.filter((p) => !others.has(p.id)),
+    kicks: d.kicks.map((k) => (others.has(k.playerId) ? { ...k, playerId: pick.id } : k)),
+    sessions: d.sessions.map((s) => ({ ...s, playerIds: [...new Set(s.playerIds.map((id) => (others.has(id) ? pick.id : id)))] })),
+    settings: { ...d.settings, meId: pick.id },
+  }
+}
+
 function load(): Data {
   try {
     const raw = localStorage.getItem(KEY)
@@ -24,7 +41,7 @@ function load(): Data {
       const st = { ...defaultSettings, ...d.settings }
       // v2: los puntos perdidos pasan a estar apagados por defecto
       if (!d.settings.v) st.showWasted = false
-      return { ...d, settings: { ...st, v: 2 } as Settings }
+      return ensureMe({ ...d, settings: { ...st, v: 2 } as Settings })
     }
   } catch {
     /* sin storage: arrancamos con ejemplo */
@@ -43,6 +60,10 @@ type Action =
   | { t: 'settings'; s: Partial<Settings> }
   | { t: 'clearDemo' }
   | { t: 'replace'; d: Data }
+  | { t: 'setMe'; p: Player }
+  | { t: 'importData'; sessions: Session[]; kicks: Kick[] }
+  | { t: 'adoptAccount'; uid: string; p: Player; settings?: Partial<Settings> }
+  | { t: 'reset' }
 
 function upsert<T extends { id: string }>(arr: T[], item: T) {
   const i = arr.findIndex((x) => x.id === item.id)
@@ -52,7 +73,7 @@ function upsert<T extends { id: string }>(arr: T[], item: T) {
   return c
 }
 
-function reducer(d: Data, a: Action): Data {
+export function reducer(d: Data, a: Action): Data {
   switch (a.t) {
     case 'upsertPlayer':
       return { ...d, players: upsert(d.players, a.p) }
@@ -93,7 +114,25 @@ function reducer(d: Data, a: Action): Data {
       }
     }
     case 'replace':
-      return { ...a.d, settings: { ...defaultSettings, ...a.d.settings } }
+      return ensureMe({ ...a.d, settings: { ...defaultSettings, ...a.d.settings } })
+    case 'adoptAccount': {
+      // Lo que estaba en el celular pasa a ser de la cuenta (id del usuario de Supabase)
+      const old = d.settings.meId
+      const swap = (id: string) => (id === old ? a.uid : id)
+      return {
+        ...d,
+        players: [...d.players.filter((p) => p.demo), a.p],
+        kicks: d.kicks.map((k) => (k.id.startsWith('demo-') ? k : { ...k, playerId: swap(k.playerId) })),
+        sessions: d.sessions.map((s) => (s.demo ? s : { ...s, playerIds: [a.uid] })),
+        settings: { ...d.settings, ...(a.settings ?? {}), meId: a.uid, lastPlayerId: undefined },
+      }
+    }
+    case 'reset':
+      return { version: 1, settings: { ...defaultSettings }, ...makeDemo() }
+    case 'importData':
+      return { ...d, sessions: [...d.sessions, ...a.sessions], kicks: [...d.kicks, ...a.kicks] }
+    case 'setMe':
+      return { ...d, players: upsert(d.players, a.p), settings: { ...d.settings, meId: a.p.id } }
   }
 }
 
@@ -115,6 +154,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [data.settings.theme])
   const v = useMemo(() => ({ data, dispatch }), [data])
   return <Ctx.Provider value={v}>{children}</Ctx.Provider>
+}
+
+/** El pateador de esta cuenta */
+export function useMe() {
+  const { data } = useStore()
+  return data.players.find((p) => p.id === data.settings.meId)
 }
 
 export function useStore() {

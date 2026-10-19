@@ -18,7 +18,6 @@ export default function Report() {
   const ks = useMemo(() => applyFilter(data, f), [data, filter, scope]) // eslint-disable-line react-hooks/exhaustive-deps
   const sum = useMemo(() => summarize(ks, f.minAttempts, data.settings.pointsInFriendlies), [ks]) // eslint-disable-line react-hooks/exhaustive-deps
   const mapRef = useRef<HTMLDivElement>(null)
-  const players = new Set(ks.map((k) => k.kick.playerId)).size
   const ref = data.settings.defaultPitch
 
   async function run(kind: 'pdf' | 'xlsx') {
@@ -58,16 +57,13 @@ export default function Report() {
           </div>
           <div>
             <dt>Pateador</dt>
-            <dd>{filter.playerId === 'all' ? 'Todos' : data.players.find((p) => p.id === filter.playerId)?.name}</dd>
+            <dd>{data.players.find((p) => p.id === data.settings.meId)?.name}</dd>
           </div>
           <div>
             <dt>Patadas en el informe</dt>
             <dd>{ks.length}</dd>
           </div>
-          <div>
-            <dt>Pateadores</dt>
-            <dd>{players}</dd>
-          </div>
+
         </dl>
         <p className="hint">Usa los mismos filtros que Análisis. El PDF trae el resumen, el mapa, la tabla por zonas y la evolución. El Excel trae además cada patada con su distancia, ángulo y una hoja que explica cada cálculo.</p>
         <button className="btn-primary wide" disabled={!ks.length || !!busy} onClick={() => run('pdf')}>

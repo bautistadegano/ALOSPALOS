@@ -70,6 +70,8 @@ const PRINT: Record<string, string> = {
   '--post': '#ffffff',
   '--try': '#ffffff',
   '--good': '#2e7d32',
+  '--mark-good': '#2e7d32',
+  '--mark-bad': '#c62828',
   '--bad': '#c62828',
   '--mark-stroke': '#ffffff',
   '--z-good': '#43a047',

@@ -41,14 +41,6 @@ export default function Analysis() {
           <button className="chip" onClick={() => setSheet(true)}>
             {PERIOD_LABEL[filter.period]}
           </button>
-          <select className="chip select" aria-label="Pateador" value={filter.playerId} onChange={(e) => set({ playerId: e.target.value })}>
-            <option value="all">Todos los pateadores</option>
-            {data.players.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
         </div>
 
         <Cards sum={sum} showWasted={data.settings.showWasted} onMisses={() => nav.push({ name: 'misses' })} />
@@ -364,7 +356,7 @@ export function Trend({ ks }: { ks: EKick[] }) {
   )
 }
 
-function FilterForm({ filter, onChange }: { filter: Filter; onChange: (f: Filter) => void }) {
+export function FilterForm({ filter, onChange }: { filter: Filter; onChange: (f: Filter) => void }) {
   const set = (p: Partial<Filter>) => onChange({ ...filter, ...p })
   return (
     <div className="filter-form">
@@ -399,8 +391,6 @@ function FilterForm({ filter, onChange }: { filter: Filter; onChange: (f: Filter
           />
         </>
       )}
-      <span className="group-label">Pie hábil</span>
-      <Chips<Foot> multi value={filter.feet} onChange={(feet) => set({ feet })} options={(Object.keys(FOOT_LABEL) as Foot[]).map((t) => ({ value: t, label: FOOT_LABEL[t] }))} />
       <span className="group-label">Mínimo de intentos por zona</span>
       <div className="stepper">
         <button onClick={() => set({ minAttempts: Math.max(1, filter.minAttempts - 1) })} aria-label="Menos">
@@ -411,7 +401,6 @@ function FilterForm({ filter, onChange }: { filter: Filter; onChange: (f: Filter
           +
         </button>
       </div>
-      <Switch label="Espejar zurdos" hint="Da vuelta las patadas de los zurdos para compararlas con las de los diestros." checked={filter.mirror} onChange={(mirror) => set({ mirror })} />
     </div>
   )
 }

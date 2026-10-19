@@ -179,20 +179,20 @@ export default function PitchView({ pitch, marks = [], pending, tryX, tryMode, o
               }}
             >
               <circle cx={m.x} cy={m.y} r={2.2} fill="transparent" />
-              <circle cx={m.x} cy={m.y} r={0.95} fill={good ? 'var(--good)' : 'var(--bad)'} stroke="var(--mark-stroke)" strokeWidth={0.2} />
-              {m.result === 'derecha' && <path d={`M${m.x + 1.4} ${m.y}h1.8m-0.7 -0.6l0.7 0.6l-0.7 0.6`} stroke="var(--bad)" strokeWidth={0.3} fill="none" />}
-              {m.result === 'izquierda' && <path d={`M${m.x - 1.4} ${m.y}h-1.8m0.7 -0.6l-0.7 0.6l0.7 0.6`} stroke="var(--bad)" strokeWidth={0.3} fill="none" />}
-              {m.result === 'corta' && <path d={`M${m.x} ${m.y + 1.4}v1.8m-0.6 -0.7l0.6 0.7l0.6 -0.7`} stroke="var(--bad)" strokeWidth={0.3} fill="none" />}
-              {m.result === 'palo' && <path d={`M${m.x - 0.9} ${m.y - 1.5}v-1.4M${m.x + 0.9} ${m.y - 1.5}v-1.4M${m.x - 0.9} ${m.y - 2.2}h1.8`} stroke="var(--bad)" strokeWidth={0.28} fill="none" />}
+              <circle cx={m.x} cy={m.y} r={0.95} fill={good ? 'var(--mark-good)' : 'var(--mark-bad)'} stroke="var(--mark-stroke)" strokeWidth={0.2} />
+              {m.result === 'derecha' && <path d={`M${m.x + 1.4} ${m.y}h1.8m-0.7 -0.6l0.7 0.6l-0.7 0.6`} stroke="var(--mark-bad)" strokeWidth={0.3} fill="none" />}
+              {m.result === 'izquierda' && <path d={`M${m.x - 1.4} ${m.y}h-1.8m0.7 -0.6l-0.7 0.6l0.7 0.6`} stroke="var(--mark-bad)" strokeWidth={0.3} fill="none" />}
+              {m.result === 'corta' && <path d={`M${m.x} ${m.y + 1.4}v1.8m-0.6 -0.7l0.6 0.7l0.6 -0.7`} stroke="var(--mark-bad)" strokeWidth={0.3} fill="none" />}
+              {m.result === 'palo' && <path d={`M${m.x - 0.9} ${m.y - 1.5}v-1.4M${m.x + 0.9} ${m.y - 1.5}v-1.4M${m.x - 0.9} ${m.y - 2.2}h1.8`} stroke="var(--mark-bad)" strokeWidth={0.28} fill="none" />}
             </g>
           )
         })}
 
       {pending && (
         <g pointerEvents="none">
-          <line x1={pending.x} y1={pending.y} x2={cx} y2={-1.4} stroke="var(--good)" strokeWidth={0.22} />
-          <circle cx={pending.x} cy={pending.y} r={1.5} fill="var(--good)" fillOpacity={0.35} stroke="var(--good)" strokeWidth={0.3} />
-          <circle cx={pending.x} cy={pending.y} r={0.8} fill="var(--good)" />
+          <line x1={pending.x} y1={pending.y} x2={cx} y2={-1.4} stroke="var(--mark-good)" strokeWidth={0.22} />
+          <circle cx={pending.x} cy={pending.y} r={1.5} fill="var(--mark-good)" fillOpacity={0.35} stroke="var(--mark-good)" strokeWidth={0.3} />
+          <circle cx={pending.x} cy={pending.y} r={0.8} fill="var(--mark-good)" />
         </g>
       )}
     </svg>

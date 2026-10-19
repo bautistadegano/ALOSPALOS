@@ -41,16 +41,14 @@ export default function SessionForm({ id }: { id?: string }) {
         date: new Date().toISOString(),
         place: '',
         pitch: { ...data.settings.defaultPitch },
-        playerIds: data.settings.lastPlayerId && data.players.some((p) => p.id === data.settings.lastPlayerId) ? [data.settings.lastPlayerId] : data.players.length === 1 ? [data.players[0].id] : [],
+        playerIds: data.settings.meId ? [data.settings.meId] : [],
         windDir: null,
         createdAt: Date.now(),
       },
   )
-  const [newName, setNewName] = useState('')
   const [pitchOpen, setPitchOpen] = useState(false)
   const [status, setStatus] = useState<'idle' | 'loading' | 'ok' | 'fail'>('idle')
   const set = (p: Partial<Session>) => setS((x) => ({ ...x, ...p }))
-  const realPlayers = data.players
 
   useEffect(() => {
     if (existing) return
@@ -75,15 +73,10 @@ export default function SessionForm({ id }: { id?: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const canSave = s.playerIds.length > 0 || newName.trim().length > 0
+  const canSave = true
 
   function save() {
-    let playerIds = s.playerIds
-    if (newName.trim()) {
-      const pid = uid()
-      dispatch({ t: 'upsertPlayer', p: { id: pid, name: newName.trim(), foot: 'derecho' } })
-      playerIds = [...playerIds, pid]
-    }
+    const playerIds = data.settings.meId ? [data.settings.meId] : s.playerIds
     const out = { ...s, playerIds }
     dispatch({ t: 'upsertSession', s: out })
     if (existing) nav.back()
@@ -132,16 +125,6 @@ export default function SessionForm({ id }: { id?: string }) {
                 : 'Los amistosos no suman puntos (se cambia en Ajustes).'}
             </p>
           )}
-        </div>
-
-        <div className="group">
-          <span className="group-label">Pateadores</span>
-          {realPlayers.length > 0 && (
-            <Chips multi value={s.playerIds} onChange={(playerIds) => set({ playerIds })} options={realPlayers.map((p) => ({ value: p.id, label: p.name }))} />
-          )}
-          <Field label={realPlayers.length ? 'Agregar otro pateador' : '¿Quién patea? (tu nombre)'} icon={<IUsers />}>
-            <input id="sf-newname" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Nombre" autoComplete="off" />
-          </Field>
         </div>
 
         <Field label="Fecha y hora" icon={<ICal />}>

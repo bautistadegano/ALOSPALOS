@@ -4,6 +4,8 @@ import { TopBar, Segmented, Switch, Field, NumInput } from '../ui'
 import { ILink, IDownload, IUpload, ITrash } from '../icons'
 import { deliver } from '../export'
 import { BrandFull } from '../Brand'
+import { useAuth } from '../auth'
+import { ImportCard } from './Import'
 import type { Data, Settings as S } from '../types'
 
 export default function Settings() {
@@ -11,6 +13,8 @@ export default function Settings() {
   const st = data.settings
   const set = (s: Partial<S>) => dispatch({ t: 'settings', s })
   const [msg, setMsg] = useState('')
+  const auth = useAuth()
+  const [confirmOut, setConfirmOut] = useState(false)
   const [confirmDemo, setConfirmDemo] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const hasDemo = data.sessions.some((s) => s.demo) || data.players.some((p) => p.demo)
@@ -102,9 +106,48 @@ export default function Settings() {
           </button>
         </div>
 
+        <ImportCard />
+
+        {auth.linked && auth.user && (
+          <div className="group">
+            <span className="group-label">Cuenta</span>
+            <p className="account-line">
+              <strong>{auth.user.email}</strong>
+              <span className={`sync sync-${auth.sync}`}>
+                {auth.sync === 'syncing'
+                  ? 'Guardando en tu cuenta…'
+                  : auth.sync === 'ok'
+                    ? `Todo guardado en tu cuenta${auth.lastSync ? ` · ${new Date(auth.lastSync).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })}` : ''}`
+                    : auth.sync === 'offline'
+                      ? 'Sin conexión: se guarda en el celular y se sube cuando vuelva la señal'
+                      : auth.sync === 'error'
+                        ? `No se pudo guardar en la cuenta (${auth.syncError}). Se reintenta solo.`
+                        : ''}
+              </span>
+            </p>
+            {confirmOut ? (
+              <div className="confirm inline">
+                <span>¿Cerrar sesión en este celular? Tus patadas quedan guardadas en la cuenta.</span>
+                <button className="btn-text" onClick={() => setConfirmOut(false)}>
+                  No
+                </button>
+                <button className="btn-danger" onClick={() => auth.signOut()}>
+                  Cerrar sesión
+                </button>
+              </div>
+            ) : (
+              <button className="list-btn" onClick={() => setConfirmOut(true)}>
+                Cerrar sesión
+              </button>
+            )}
+          </div>
+        )}
+
         <div className="group">
           <span className="group-label">Tus datos</span>
-          <p className="hint">Por ahora todo se guarda en este celular. Hacé una copia de vez en cuando hasta que estén las cuentas.</p>
+          <p className="hint">
+            {auth.linked ? 'Tus patadas se guardan en tu cuenta y en el celular. La copia es opcional, por si querés tenerla aparte.' : 'En esta versión todo se guarda en este celular. Hacé una copia de vez en cuando.'}
+          </p>
           <button className="list-btn" onClick={backup}>
             <IDownload /> Guardar copia de seguridad
           </button>
@@ -133,7 +176,7 @@ export default function Settings() {
 
         <BrandFull />
         <p className="about">
-          A los Palos · versión 0.2
+          A los Palos · versión 0.4
           <br />
           {data.sessions.length} sesiones · {data.kicks.length} patadas · {data.players.length} pateadores
         </p>

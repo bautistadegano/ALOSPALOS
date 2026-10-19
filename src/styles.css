@@ -19,6 +19,8 @@
   --accent-ink: #521020;
   --accent-soft: #5e1c2d;
   --good: #6fd08a;
+  --mark-good: #6fd08a;
+  --mark-bad: #ff8f86;
   --good-btn: #2e8a4a;
   --bad: #ff8f86;
   --bad-btn: #121012;
@@ -78,7 +80,7 @@
     --brand-card: rgba(255, 255, 255, 0.96);
     --grass: #3d7a4b;
     --ingoal: #326640;
-    --mark-stroke: rgba(255, 255, 255, 0.85);
+    --mark-stroke: rgba(10, 20, 14, 0.7);
     --z-good: #4caf5f;
     --z-mid: #c3c247;
     --z-low: #e0913e;
@@ -117,7 +119,7 @@
   --brand-card: rgba(255, 255, 255, 0.96);
   --grass: #3d7a4b;
   --ingoal: #326640;
-  --mark-stroke: rgba(255, 255, 255, 0.85);
+  --mark-stroke: rgba(10, 20, 14, 0.7);
   --z-good: #4caf5f;
   --z-mid: #c3c247;
   --z-low: #e0913e;
@@ -136,6 +138,18 @@ html,
 body,
 #root {
   height: 100%;
+}
+/* La altura incluye el margen de seguridad del celular (notch / barra de estado) */
+html {
+  box-sizing: border-box;
+}
+/* Acceso directo en la pantalla de inicio: la app ocupa toda la pantalla, hay que dejar
+   libre la barra de estado (hora, batería) para que no tape la cabecera */
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  #root {
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+  }
 }
 body {
   margin: 0;
@@ -1794,4 +1808,337 @@ h3 {
 }
 :root[data-theme='light'] .hmark {
   filter: none;
+}
+
+.row-label {
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.profile-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 0;
+}
+.profile-head h2 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 600;
+}
+.profile-head p {
+  margin: 0;
+  color: var(--muted);
+}
+.avatar.big {
+  width: 64px;
+  height: 64px;
+  font-size: 28px;
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.social-teaser {
+  border: 1px dashed var(--border);
+  border-radius: var(--r);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.social-teaser h3 {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+}
+.social-teaser p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+.social-icons {
+  display: flex;
+  gap: 10px;
+  color: var(--accent);
+}
+.onboarding .content {
+  margin-top: 10px;
+  padding-top: 12px;
+  padding-bottom: 40px;
+}
+.onb-text {
+  margin: 0;
+  text-align: center;
+  color: var(--muted);
+  text-wrap: balance;
+}
+@media (max-width: 430px) {
+  .form .seg:not(.seg-sm) button svg {
+    display: none;
+  }
+}
+
+/* Nombre de usuario */
+.at {
+  color: var(--muted);
+  font-size: 17px;
+}
+.handle {
+  color: var(--accent) !important;
+  font-weight: 600;
+}
+/* Importar desde otra app */
+.import-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  padding: 14px 16px;
+  border-radius: var(--r);
+  border: 1px solid var(--accent);
+  background: var(--accent-soft);
+  color: var(--fg);
+}
+.import-card svg {
+  flex: none;
+  color: var(--accent);
+}
+.import-card span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.import-card small {
+  color: var(--muted);
+  font-size: 13px;
+}
+.import-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.import-intro h2,
+.review-title,
+.import-done h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 22px;
+}
+.import-intro > p {
+  margin: 0;
+  color: var(--muted);
+}
+.import-steps {
+  margin: 0;
+  padding: 12px 14px 12px 34px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14.5px;
+}
+.import-tips {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.import-tips p {
+  margin: 0;
+}
+.import-tips strong {
+  color: var(--fg);
+}
+.status.error {
+  color: var(--danger);
+}
+.review {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+.review-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.review-list li {
+  border-bottom: 1px solid var(--border);
+  padding: 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.review-list li.off {
+  opacity: 0.5;
+}
+.review-check {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.review-check input {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  accent-color: var(--accent);
+}
+.review-check span {
+  display: flex;
+  flex-direction: column;
+}
+.review-check small {
+  color: var(--muted);
+  font-size: 13px;
+}
+.review-edit {
+  display: flex;
+  gap: 8px;
+  padding-left: 32px;
+}
+.review-edit input,
+.review-edit select {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 14px;
+  min-width: 0;
+}
+.ztable.edit .ecell {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--fg);
+  padding: 4px 2px;
+  white-space: nowrap;
+}
+.ztable.edit .ecell.bad {
+  border-color: var(--danger);
+}
+.ztable.edit .ecell input {
+  width: 26px;
+  border: 0;
+  background: var(--surface-2);
+  border-radius: 4px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 3px 0;
+  font-variant-numeric: tabular-nums;
+}
+.ztable.edit .ecell span {
+  color: var(--muted);
+  margin: 0 1px;
+}
+.import-done {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  padding: 32px 0;
+}
+.done-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--good-btn);
+  color: #fff;
+}
+
+/* Cuenta y amigos */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.auth-form p {
+  margin: 0;
+}
+.auth-title {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 600;
+}
+.auth-switch {
+  text-align: center;
+  color: var(--muted);
+}
+.splash {
+  justify-content: center;
+}
+.account-line {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sync {
+  font-size: 13px;
+  color: var(--muted);
+}
+.sync-ok {
+  color: var(--good);
+}
+.sync-error {
+  color: var(--danger);
+}
+.social {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.social-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 999px;
+  padding: 8px 14px;
+}
+.search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  outline: none;
+  font-size: 16px;
+}
+.people .person {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.pill-muted {
+  font-size: 13px;
+  color: var(--muted);
+  border: 1px dashed var(--border);
+  border-radius: 999px;
+  padding: 6px 12px;
+}
+.cmp-table small {
+  color: var(--muted);
+  font-weight: 400;
+  margin-left: 4px;
+}
+.danger-zone {
+  padding-top: 8px;
 }

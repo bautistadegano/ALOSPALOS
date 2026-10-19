@@ -12,6 +12,8 @@ export interface Pitch {
 
 export interface Player {
   id: string
+  /** Nombre de usuario único (para amigos y desafíos) */
+  username?: string
   name: string
   foot: Foot
   height?: number
@@ -39,6 +41,8 @@ export interface Session {
   pitch: Pitch
   playerIds: string[]
   demo?: boolean
+  /** Clave de importación (para no cargar dos veces lo mismo) */
+  importKey?: string
   createdAt: number
 }
 
@@ -53,6 +57,8 @@ export interface Kick {
   result: Result
   half?: 1 | 2
   tee?: boolean
+  /** Patada reconstruida desde el resumen de otra app (posición aproximada) */
+  approx?: boolean
   createdAt: number
 }
 
@@ -62,6 +68,8 @@ export interface Settings {
   pointsInFriendlies: boolean
   defaultPitch: Pitch
   lastPlayerId?: string
+  /** El usuario de esta cuenta (cada cuenta es un pateador) */
+  meId?: string
   v?: number
 }
 

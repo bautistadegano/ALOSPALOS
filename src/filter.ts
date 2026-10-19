@@ -27,14 +27,14 @@ export const defaultFilter: Filter = {
   feet: [],
   minAttempts: 5,
   mirror: false,
-  showKicks: true,
+  showKicks: false,
   zoneLabel: 'frac',
 }
 export const SCOPE_LABEL: Record<Scope, string> = { piso: 'De piso', drop: 'Drops', todas: 'Todas' }
 export const PERIOD_LABEL: Record<Period, string> = { all: 'Siempre', '7': 'Últimos 7 días', '30': 'Últimos 30 días', '90': 'Últimos 90 días', custom: 'Rango' }
 
 export function activeFilterCount(f: Filter) {
-  return (f.sessionTypes.length ? 1 : 0) + (f.kickTypes.length ? 1 : 0) + (f.feet.length ? 1 : 0) + (f.mirror ? 1 : 0)
+  return (f.sessionTypes.length ? 1 : 0) + (f.kickTypes.length ? 1 : 0) + 0
 }
 
 export function applyFilter(d: Data, f: Filter): EKick[] {

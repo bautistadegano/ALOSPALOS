@@ -13,11 +13,8 @@ export default function SessionView({ id }: { id: string }) {
   const nav = useNav()
   const s = data.sessions.find((x) => x.id === id)
   const kicks = useMemo(() => data.kicks.filter((k) => k.sessionId === id).sort((a, b) => a.createdAt - b.createdAt), [data.kicks, id])
-  const sessionPlayers = data.players.filter((p) => s?.playerIds.includes(p.id))
-  const [playerId, setPlayerId] = useState<string>(() => {
-    const last = data.settings.lastPlayerId
-    return s?.playerIds.includes(last ?? '') ? last! : s?.playerIds[0] ?? data.players[0]?.id ?? ''
-  })
+  // Cada cuenta es un pateador: en sesiones de ejemplo se usa el jugador de ejemplo
+  const playerId = s?.demo ? s.playerIds[0] ?? '' : data.settings.meId ?? s?.playerIds[0] ?? ''
   const [kickType, setKickType] = useState<KickType>('conversion')
   const [tryMode, setTryMode] = useState(false)
   const [tryX, setTryX] = useState<number | null>(null)
@@ -26,7 +23,6 @@ export default function SessionView({ id }: { id: string }) {
   const [half, setHalf] = useState<1 | 2>(() => (kicks.some((k) => k.half === 2) ? 2 : 1))
   const [toast, setToast] = useState<{ kick: Kick; n: number } | null>(null)
   const [detail, setDetail] = useState<string | null>(null)
-  const [addPlayer, setAddPlayer] = useState(false)
   const toastTimer = useRef<number>()
 
   // Mantener la pantalla prendida mientras se cargan patadas
@@ -57,10 +53,7 @@ export default function SessionView({ id }: { id: string }) {
   const useTry = kickType === 'conversion' && tryMode
 
   function onTap(x: number, y: number) {
-    if (!playerId) {
-      setAddPlayer(true)
-      return
-    }
+    if (!playerId) return
     if (useTry) {
       if (tryX == null) {
         setTryX(x)
@@ -103,7 +96,7 @@ export default function SessionView({ id }: { id: string }) {
   }
 
   const hint = !playerId
-    ? 'Primero agregá un pateador'
+    ? 'Completá tu perfil para cargar patadas'
     : useTry
       ? tryX == null
         ? 'Tocá dónde se apoyó el try'
@@ -115,7 +108,6 @@ export default function SessionView({ id }: { id: string }) {
         : 'Tocá desde dónde se patea'
 
   const detailKick = detail ? kicks.find((k) => k.id === detail) : undefined
-  const otherPlayers = data.players.filter((p) => !s.playerIds.includes(p.id))
 
   return (
     <div className="screen kick-screen">
@@ -132,16 +124,7 @@ export default function SessionView({ id }: { id: string }) {
       <div className="kick-body">
       <div className="kick-controls">
         <div className="player-row">
-          {sessionPlayers.map((p) => (
-            <button key={p.id} className={`player-chip${p.id === playerId ? ' on' : ''}`} onClick={() => setPlayerId(p.id)}>
-              {p.number != null && <span className="pnum">{p.number}</span>}
-              {p.name}
-            </button>
-          ))}
-          <button className="player-chip add" onClick={() => setAddPlayer(true)} aria-label="Agregar pateador">
-            <IPlus size={16} />
-            {sessionPlayers.length === 0 && 'Pateador'}
-          </button>
+          <span className="row-label">{kicks.length ? 'Adentro en esta sesión' : 'Todavía no hay patadas'}</span>
           <span className="score">
             <strong>
               {made}/{kicks.length}
@@ -203,7 +186,7 @@ export default function SessionView({ id }: { id: string }) {
       <div className="pitch-wrap">
         <PitchView
           pitch={s.pitch}
-          marks={kicks.map((k) => ({ id: k.id, x: k.x, y: k.y, result: k.result, dim: k.playerId !== playerId && sessionPlayers.length > 1 }))}
+          marks={kicks.map((k) => ({ id: k.id, x: k.x, y: k.y, result: k.result, dim: false }))}
           pending={pending}
           tryX={useTry ? tryX : null}
           tryMode={useTry}
@@ -288,7 +271,7 @@ export default function SessionView({ id }: { id: string }) {
           <KickDetail
             kick={detailKick}
             pitch={s.pitch}
-            playerName={data.players.find((p) => p.id === detailKick.playerId)?.name ?? ''}
+            playerName=""
             onChange={(k) => dispatch({ t: 'updateKick', k })}
             onDelete={() => {
               dispatch({ t: 'deleteKick', id: detailKick.id })
@@ -298,17 +281,6 @@ export default function SessionView({ id }: { id: string }) {
         )}
       </Sheet>
 
-      <Sheet open={addPlayer} onClose={() => setAddPlayer(false)} title="Agregar pateador">
-        <AddPlayer
-          others={otherPlayers}
-          onPick={(pid, newPlayer) => {
-            if (newPlayer) dispatch({ t: 'upsertPlayer', p: newPlayer })
-            dispatch({ t: 'upsertSession', s: { ...s, playerIds: [...s.playerIds, pid] } })
-            setPlayerId(pid)
-            setAddPlayer(false)
-          }}
-        />
-      </Sheet>
     </div>
   )
 }
@@ -319,7 +291,7 @@ function KickDetail({ kick, pitch, playerName, onChange, onDelete }: { kick: Kic
   return (
     <div className="kick-detail">
       <p className="kd-meta">
-        {playerName} · {KICK_LABEL[kick.kickType]} · {g.distance.toFixed(1)} m · {g.angle.toFixed(1)}°{kick.half ? ` · ${kick.half === 1 ? '1er' : '2º'} tiempo` : ''}
+        {playerName ? `${playerName} · ` : ''}{KICK_LABEL[kick.kickType]} · {g.distance.toFixed(1)} m · {g.angle.toFixed(1)}°{kick.half ? ` · ${kick.half === 1 ? '1er' : '2º'} tiempo` : ''}
         {kick.kickType !== 'drop' ? (kick.tee === false ? ' · sin tee' : ' · con tee') : ''}
       </p>
       <span className="group-label">Resultado</span>
@@ -349,37 +321,6 @@ function KickDetail({ kick, pitch, playerName, onChange, onDelete }: { kick: Kic
           <ITrash size={18} /> Borrar patada
         </button>
       )}
-    </div>
-  )
-}
-
-function AddPlayer({ others, onPick }: { others: { id: string; name: string }[]; onPick: (id: string, p?: { id: string; name: string; foot: 'derecho' }) => void }) {
-  const [name, setName] = useState('')
-  return (
-    <div className="add-player">
-      {others.length > 0 && (
-        <div className="chips">
-          {others.map((p) => (
-            <button key={p.id} className="chip" onClick={() => onPick(p.id)}>
-              {p.name}
-            </button>
-          ))}
-        </div>
-      )}
-      <form
-        className="inline-form"
-        onSubmit={(e) => {
-          e.preventDefault()
-          if (!name.trim()) return
-          const id = uid()
-          onPick(id, { id, name: name.trim(), foot: 'derecho' })
-        }}
-      >
-        <input id="ap-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nombre de un pateador nuevo" autoComplete="off" />
-        <button className="btn-primary" disabled={!name.trim()}>
-          Agregar
-        </button>
-      </form>
     </div>
   )
 }

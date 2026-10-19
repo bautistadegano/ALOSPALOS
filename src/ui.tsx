@@ -8,6 +8,8 @@ export type Route =
   | { name: 'playerForm'; id?: string }
   | { name: 'report' }
   | { name: 'misses' }
+  | { name: 'import' }
+  | { name: 'friend'; id: string }
 export type Tab = 'sesiones' | 'analisis' | 'jugadores' | 'ajustes'
 
 export const NavCtx = createContext<{ push: (r: Route) => void; back: () => void; replace: (r: Route) => void } | null>(null)

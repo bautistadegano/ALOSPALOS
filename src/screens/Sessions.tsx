@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useStore } from '../store'
 import { useNav, fmtDate } from '../ui'
 import { BrandHeader } from '../Brand'
+import { ImportCard } from './Import'
 import { IPlus, IMore, SessionIcon, WeatherIcon, IEdit, ITrash } from '../icons'
 import { SESSION_LABEL } from '../types'
 import { sessionPoints } from '../stats'
@@ -36,6 +37,7 @@ export default function Sessions() {
             </button>
           </div>
         )}
+        {!data.sessions.some((s) => !s.demo) && <ImportCard />}
         <h2 className="section-title">Sesiones</h2>
         {sessions.length === 0 && (
           <div className="empty">

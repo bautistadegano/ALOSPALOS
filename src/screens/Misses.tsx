@@ -1,14 +1,15 @@
 import { useMemo, useState } from 'react'
 import { useStore } from '../store'
-import { useNav, TopBar } from '../ui'
+import { useNav, TopBar, Segmented, Sheet } from '../ui'
+import { FilterForm } from './Analysis'
+import { IFilter } from '../icons'
 import PitchView, { zoneColor } from '../components/Pitch'
-import { applyFilter, PERIOD_LABEL, SCOPE_LABEL, useFilter } from '../filter'
+import { applyFilter, activeFilterCount, defaultFilter, PERIOD_LABEL, SCOPE_LABEL, useFilter, type Filter, type Scope } from '../filter'
 import { BANDS, BAND_LABEL, type EKick } from '../geo'
 import { fmtPct, pct, type Cell } from '../stats'
 import type { Result } from '../types'
 
 type Lado = 'izq' | 'medio' | 'der'
-const LADO_LABEL: Record<Lado, string> = { izq: 'Izquierda', medio: 'Medio', der: 'Derecha' }
 const LADO_DESDE: Record<Lado, string> = { izq: 'Desde la izquierda', medio: 'Desde el medio', der: 'Desde la derecha' }
 const ladoOf = (k: EKick): Lado => (k.signedAngle <= -10 ? 'izq' : k.signedAngle >= 10 ? 'der' : 'medio')
 
@@ -47,7 +48,10 @@ function tendency(a: ReturnType<typeof analyze>) {
 export default function Misses() {
   const { data } = useStore()
   const nav = useNav()
-  const { filter } = useFilter()
+  const global = useFilter().filter
+  // Filtro propio de esta pantalla (arranca igual que el de Análisis)
+  const [filter, setFilter] = useState<Filter>(global)
+  const [sheet, setSheet] = useState(false)
   const ks = useMemo(() => applyFilter(data, filter), [data, filter])
   const groups = useMemo(() => {
     const g: Record<Lado, EKick[]> = { izq: [], medio: [], der: [] }
@@ -61,8 +65,17 @@ export default function Misses() {
 
   return (
     <div className="screen">
-      <TopBar title="Cuando errás" sub={`${SCOPE_LABEL[filter.scope]} · ${PERIOD_LABEL[filter.period]}`} onBack={nav.back} />
+      <TopBar title="Cuando errás" onBack={nav.back} />
       <main className="content">
+        <Segmented<Scope> label="Qué patadas" value={filter.scope} onChange={(scope) => setFilter({ ...filter, scope, kickTypes: [] })} options={(['piso', 'drop', 'todas'] as const).map((v) => ({ value: v, label: SCOPE_LABEL[v] }))} />
+        <div className="filter-row">
+          <button className={`chip${activeFilterCount(filter) ? ' on' : ''}`} onClick={() => setSheet(true)}>
+            <IFilter size={16} /> Filtros{activeFilterCount(filter) ? ` (${activeFilterCount(filter)})` : ''}
+          </button>
+          <button className="chip" onClick={() => setSheet(true)}>
+            {PERIOD_LABEL[filter.period]}
+          </button>
+        </div>
         <p className="hint">
           El lado se toma desde donde se patea: izquierda o derecha si el ángulo pasa los 10°, medio si está entre −10° y 10°. Así ves si el error cambia según el costado.
         </p>
@@ -70,7 +83,7 @@ export default function Misses() {
         <div className="cards three">
           {(['izq', 'medio', 'der'] as Lado[]).map((l) => (
             <button key={l} className={`card card-btn${lado === l ? ' on' : ''}`} onClick={() => setLado(l)}>
-              <span className="card-label">{LADO_LABEL[l]}</span>
+              <span className="card-label">{LADO_DESDE[l]}</span>
               <strong className="card-big">{fmtPct(an[l].total)}</strong>
               <span className="card-sub">
                 {an[l].misses} error{an[l].misses === 1 ? '' : 'es'} de {an[l].total.n}
@@ -140,9 +153,9 @@ export default function Misses() {
               <thead>
                 <tr>
                   <th />
-                  <th>Izquierda</th>
-                  <th>Medio</th>
-                  <th>Derecha</th>
+                  <th>Desde la izq.</th>
+                  <th>Desde el medio</th>
+                  <th>Desde la der.</th>
                 </tr>
               </thead>
               <tbody>
@@ -166,6 +179,17 @@ export default function Misses() {
           </div>
         </div>
       </main>
+      <Sheet open={sheet} onClose={() => setSheet(false)} title="Filtros">
+        <FilterForm filter={filter} onChange={setFilter} />
+        <div className="sheet-actions">
+          <button className="btn-text" onClick={() => setFilter({ ...defaultFilter, scope: filter.scope })}>
+            Restablecer
+          </button>
+          <button className="btn-primary" onClick={() => setSheet(false)}>
+            Ver resultados
+          </button>
+        </div>
+      </Sheet>
     </div>
   )
 }
