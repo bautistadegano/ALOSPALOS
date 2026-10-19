@@ -131,11 +131,11 @@ export default function SessionForm({ id }: { id?: string }) {
           <input id="sf-date" type="datetime-local" value={toLocalInput(s.date)} onChange={(e) => e.target.value && set({ date: new Date(e.target.value).toISOString() })} />
         </Field>
         <Field label="Lugar" icon={<IPin />}>
-          <input id="sf-place" value={s.place} onChange={(e) => set({ place: e.target.value })} placeholder="Club o cancha" />
+          <input id="sf-place" value={s.place} onChange={(e) => set({ place: e.target.value })} placeholder="Ingresá el lugar" />
         </Field>
         {s.type !== 'entrenamiento' && (
           <Field label="Rival" icon={<IUsers />}>
-            <input id="sf-opp" value={s.opponent ?? ''} onChange={(e) => set({ opponent: e.target.value })} placeholder="Nombre del rival" />
+            <input id="sf-opp" value={s.opponent ?? ''} onChange={(e) => set({ opponent: e.target.value })} placeholder="Ingresá el rival" />
           </Field>
         )}
         <div className="row2">
@@ -189,12 +189,12 @@ export default function SessionForm({ id }: { id?: string }) {
             </p>
           </div>
           <Field label="Nota del viento">
-            <input id="sf-windnote" value={s.windNote ?? ''} onChange={(e) => set({ windNote: e.target.value })} placeholder="Ej: rachas, arremolinado" />
+            <input id="sf-windnote" value={s.windNote ?? ''} onChange={(e) => set({ windNote: e.target.value })} placeholder="Ingresá una nota sobre el viento" />
           </Field>
         </div>
 
         <Field label="Nota">
-          <input id="sf-note" value={s.note ?? ''} onChange={(e) => set({ note: e.target.value })} placeholder="Algo para recordar" />
+          <input id="sf-note" value={s.note ?? ''} onChange={(e) => set({ note: e.target.value })} placeholder="Ingresá una nota" />
         </Field>
 
         <button className="collapse" type="button" aria-expanded={pitchOpen} onClick={() => setPitchOpen(!pitchOpen)}>

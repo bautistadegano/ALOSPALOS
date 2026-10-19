@@ -49,6 +49,14 @@ export async function usernameAvailable(u: string) {
   return !!data
 }
 
+/** Para entrar con nombre de usuario: la base devuelve el mail solo si la contraseña es correcta */
+export async function emailForLogin(username: string, password: string) {
+  if (!sb) return null
+  const { data, error } = await sb.rpc('email_for_login', { u: username, p: password })
+  if (error) throw new Error(/too_many/.test(error.message) ? 'Demasiados intentos con ese usuario. Esperá 15 minutos o entrá con tu mail.' : error.message)
+  return (data as string | null) ?? null
+}
+
 export async function fetchProfile(id: string): Promise<ProfileRow | null> {
   if (!sb) return null
   const { data, error } = await sb.from('profiles').select('*').eq('id', id).maybeSingle()

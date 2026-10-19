@@ -136,3 +136,39 @@ drop policy if exists "aceptar amistad" on public.friendships;
 create policy "aceptar amistad" on public.friendships for update to authenticated using (addressee = auth.uid()) with check (addressee = auth.uid());
 drop policy if exists "borrar amistad" on public.friendships;
 create policy "borrar amistad" on public.friendships for delete to authenticated using (auth.uid() in (requester, addressee));
+
+-- ---------- Entrar con nombre de usuario ----------
+-- Devuelve el mail SOLO si la contraseña es correcta (así no se pueden sacar mails ajenos).
+-- Máximo 10 intentos fallidos cada 15 minutos por usuario.
+create extension if not exists pgcrypto with schema extensions;
+create table if not exists public.login_attempts (
+  username citext not null,
+  at timestamptz not null default now()
+);
+create index if not exists login_attempts_user on public.login_attempts (username, at);
+alter table public.login_attempts enable row level security; -- sin reglas: nadie la lee desde la app
+
+create or replace function public.email_for_login(u text, p text) returns text
+language plpgsql security definer set search_path = public, extensions, auth as $$
+declare
+  v_email text;
+  v_hash text;
+begin
+  u := lower(ltrim(trim(u), '@'));
+  if (select count(*) from login_attempts where username = u and at > now() - interval '15 minutes') >= 10 then
+    raise exception 'too_many_attempts';
+  end if;
+  select au.email, au.encrypted_password into v_email, v_hash
+  from profiles pr join auth.users au on au.id = pr.id
+  where pr.username = u;
+  if v_hash is not null and v_hash = crypt(p, v_hash) then
+    delete from login_attempts where username = u;
+    return v_email;
+  end if;
+  insert into login_attempts (username) values (u);
+  delete from login_attempts where at < now() - interval '1 day';
+  return null;
+end;
+$$;
+revoke all on function public.email_for_login(text, text) from public;
+grant execute on function public.email_for_login(text, text) to anon, authenticated;

@@ -176,7 +176,7 @@ export default function Settings() {
 
         <BrandFull />
         <p className="about">
-          A los Palos · versión 0.4
+          A los Palos · versión 0.6
           <br />
           {data.sessions.length} sesiones · {data.kicks.length} patadas · {data.players.length} pateadores
         </p>

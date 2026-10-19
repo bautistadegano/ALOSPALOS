@@ -146,10 +146,12 @@ export function PlayerForm({ id, onboarding }: { id?: string; onboarding?: boole
   const existing = id ? data.players.find((p) => p.id === id) : undefined
   const [p, setP] = useState<Player>(existing ?? { id: uid(), name: '', foot: 'derecho' })
   const set = (x: Partial<Player>) => setP((o) => ({ ...o, ...x }))
+  const auth = useAuth()
+  // Una vez creado (y con cuenta) el usuario queda fijo; el apodo se puede cambiar siempre
+  const fixedUser = !onboarding && !!existing?.username && auth.linked
   const uname = p.username ?? ''
   const unameOk = /^[a-z0-9._]{3,20}$/.test(uname)
   const canSave = unameOk && p.name.trim().length > 0
-  const auth = useAuth()
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
   const save = async () => {
@@ -174,21 +176,31 @@ export function PlayerForm({ id, onboarding }: { id?: string; onboarding?: boole
   }
   const form = (
     <>
+      {fixedUser ? (
+        <div className="fixed-user">
+          <span className="field-label">Nombre de usuario</span>
+          <strong>@{existing!.username}</strong>
+          <span className="hint">El nombre de usuario no se puede cambiar. El apodo y los demás datos sí.</span>
+        </div>
+      ) : (
+        <>
       <Field label="Nombre de usuario">
-        <span className="at">@</span>
-        <input
-          id="pf-user"
-          value={uname}
-          onChange={(e) => set({ username: e.target.value.toLowerCase().replace(/[^a-z0-9._]/g, '').slice(0, 20) })}
-          placeholder="bauti10"
-          autoComplete="username"
-          autoCapitalize="none"
-          spellCheck={false}
-        />
-      </Field>
-      <p className="hint">{uname && !unameOk ? 'Mínimo 3 caracteres.' : 'Es con el que te van a buscar tus amigos. Letras, números, punto y guion bajo.'}</p>
+          <span className="at">@</span>
+          <input
+            id="pf-user"
+            value={uname}
+            onChange={(e) => set({ username: e.target.value.toLowerCase().replace(/[^a-z0-9._]/g, '').slice(0, 20) })}
+            placeholder="Ingresá tu nombre de usuario"
+            autoComplete="username"
+            autoCapitalize="none"
+            spellCheck={false}
+          />
+        </Field>
+        <p className="hint">{uname && !unameOk ? 'Mínimo 3 caracteres.' : 'Es con el que te van a buscar tus amigos. Letras, números, punto y guion bajo.'}</p>
+        </>
+      )}
       <Field label="Nombre o apodo">
-        <input id="pf-name" value={p.name} onChange={(e) => set({ name: e.target.value })} placeholder="Cómo querés que aparezca" autoComplete="nickname" />
+        <input id="pf-name" value={p.name} onChange={(e) => set({ name: e.target.value })} placeholder="Ingresá tu nombre o apodo" autoComplete="nickname" />
       </Field>
       <div className="group">
         <span className="group-label">Pie hábil</span>
@@ -208,7 +220,7 @@ export function PlayerForm({ id, onboarding }: { id?: string; onboarding?: boole
           <NumInput id="pf-num" value={p.number} onChange={(number) => set({ number })} />
         </Field>
         <Field label="Puesto">
-          <input id="pf-pos" value={p.position ?? ''} onChange={(e) => set({ position: e.target.value })} placeholder="Ej: Apertura" />
+          <input id="pf-pos" value={p.position ?? ''} onChange={(e) => set({ position: e.target.value })} placeholder="Ingresá tu puesto" />
         </Field>
       </div>
       {!onboarding && (

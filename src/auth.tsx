@@ -12,6 +12,9 @@ interface AuthCtx {
   user: User | null
   profile: ProfileRow | null
   recovering: boolean
+  /** mensaje para mostrar en la pantalla de ingreso (link vencido, mail confirmado, etc.) */
+  notice: string
+  clearNotice: () => void
   sync: SyncState
   lastSync: number | null
   syncError: string
@@ -34,6 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<ProfileRow | null>(null)
   const [recovering, setRecovering] = useState(false)
+  const [notice, setNotice] = useState('')
   const [sync, setSync] = useState<SyncState>('off')
   const [lastSync, setLastSync] = useState<number | null>(null)
   const [syncError, setSyncError] = useState('')
@@ -46,14 +50,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Sesión de Supabase
   useEffect(() => {
     if (!sb) return
-    sb.auth.getSession().then(({ data: d }) => {
-      setUser(d.session?.user ?? null)
-      setReady(true)
-    })
     const { data: sub } = sb.auth.onAuthStateChange((ev, session) => {
       if (ev === 'PASSWORD_RECOVERY') setRecovering(true)
       setUser(session?.user ?? null)
     })
+    ;(async () => {
+      // Links de los mails: ?token_hash=...&type=signup|recovery|email
+      // La verificación la hace la app (no el link), así los antivirus de los mails no "gastan" el link.
+      const url = new URL(location.href)
+      const tokenHash = url.searchParams.get('token_hash')
+      const type = url.searchParams.get('type') as 'signup' | 'email' | 'recovery' | 'invite' | 'email_change' | null
+      const hash = new URLSearchParams(location.hash.replace(/^#/, ''))
+      const clean = () => {
+        try {
+          history.replaceState(null, '', location.pathname)
+        } catch {
+          /* nada */
+        }
+      }
+      if (tokenHash && type) {
+        const { data: vd, error } = await sb!.auth.verifyOtp({ token_hash: tokenHash, type })
+        clean()
+        if (error) {
+          setNotice(
+            /expired|invalid/i.test(error.message)
+              ? 'El link ya se usó o venció. Si ya confirmaste, entrá con tu mail y contraseña; si no, pedí un mail nuevo.'
+              : /fetch/i.test(error.message)
+                ? 'No hay conexión para confirmar el mail. Abrí el link de nuevo cuando tengas señal.'
+                : `No se pudo confirmar: ${error.message}`,
+          )
+        } else {
+          if (type === 'recovery') setRecovering(true)
+          else setNotice('¡Mail confirmado! Ya podés usar la app.')
+          setUser(vd.session?.user ?? vd.user ?? null)
+        }
+      } else if (hash.get('error_description')) {
+        // Links viejos que vuelven con error en la dirección
+        const code = hash.get('error_code') ?? ''
+        setNotice(
+          code === 'otp_expired'
+            ? 'El link ya se usó o venció. Si ya confirmaste, entrá con tu mail y contraseña; si no, pedí un mail nuevo.'
+            : `No se pudo confirmar: ${hash.get('error_description')}`,
+        )
+        clean()
+      }
+      const { data: d } = await sb!.auth.getSession()
+      setUser(d.session?.user ?? null)
+      setReady(true)
+    })()
     return () => sub.subscription.unsubscribe()
   }, [])
 
@@ -193,6 +237,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       profile,
       recovering,
+      notice,
+      clearNotice: () => setNotice(''),
       sync,
       lastSync,
       syncError,
@@ -227,7 +273,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       syncNow: () => void doPush(),
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [ready, user, profile, recovering, sync, lastSync, syncError, linked],
+    [ready, user, profile, recovering, notice, sync, lastSync, syncError, linked],
   )
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

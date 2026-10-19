@@ -2142,3 +2142,31 @@ h3 {
 .danger-zone {
   padding-top: 8px;
 }
+.notice-line {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+  background: var(--accent-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 4px 4px 4px 14px;
+  font-size: 14px;
+}
+.notice-line.ok {
+  border-color: var(--good);
+}
+.status.ok {
+  color: var(--good);
+}
+.fixed-user {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 0 8px;
+  border-bottom: 1px solid var(--border);
+}
+.fixed-user strong {
+  font-size: 17px;
+}

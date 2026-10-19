@@ -15,7 +15,10 @@ Para que le llegue a cualquiera:
    - Sender email: el mail verificado · Sender name: A los Palos
    - Host: smtp-relay.brevo.com · Port: 587 · Username: el login de Brevo · Password: la SMTP key
 5. En **Authentication → Rate limits** subí "emails per hour" (ej. 100).
-6. (Opcional) **Authentication → Emails → Templates → Confirm signup**: cambiá el texto a español.
+6. **Authentication → Emails → Templates** (obligatorio, el link del mail tiene un formato especial):
+   - **Confirm signup** → Subject: `Confirmá tu cuenta de A los Palos` → pegá todo `emails/confirmar-cuenta.html`.
+   - **Reset password** → Subject: `Cambiá tu contraseña de A los Palos` → pegá todo `emails/recuperar-contrasena.html`.
+   - No hay que cambiar nada adentro: `{{ .SiteURL }}` y `{{ .TokenHash }}` los completa Supabase solo.
 
 ## 3. Publicar en Vercel
 1. Subí esta carpeta a un repo nuevo de GitHub.

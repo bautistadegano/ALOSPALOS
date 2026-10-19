@@ -98,7 +98,7 @@ export function Social() {
       </h3>
       <div className="search">
         <span className="at">@</span>
-        <input id="fr-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por usuario o nombre" autoCapitalize="none" spellCheck={false} />
+        <input id="fr-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ingresá un usuario o nombre" autoCapitalize="none" spellCheck={false} />
       </div>
       {q.trim().length >= 2 && (
         <ul className="list people">
