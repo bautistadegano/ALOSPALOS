@@ -177,7 +177,7 @@ export default function App() {
 function Splash({ text, action }: { text: string; action?: { label: string; run: () => void } }) {
   return (
     <div className="screen onboarding">
-      <main className="content form splash">
+      <main className="content form splash"><div className="content-inner">
         <BrandFull />
         {text && <p className="onb-text">{text}</p>}
         {action && (
@@ -185,7 +185,7 @@ function Splash({ text, action }: { text: string; action?: { label: string; run:
             {action.label}
           </button>
         )}
-      </main>
+      </div></main>
     </div>
   )
 }

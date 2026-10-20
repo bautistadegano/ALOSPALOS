@@ -97,7 +97,7 @@ export default function Profile() {
           </button>
         }
       />
-      <main className="content">
+      <main className="content"><div className="content-inner">
         <section className="profile-head">
           <span className="avatar big">{me.number ?? me.name.slice(0, 1).toUpperCase()}</span>
           <div>
@@ -134,7 +134,7 @@ export default function Profile() {
             <p>Funciona en la app publicada con tu cuenta: sumás amigos del club, comparás estadísticas y armás desafíos.</p>
           </section>
         )}
-      </main>
+      </div></main>
     </div>
   )
 }
@@ -247,11 +247,11 @@ export function PlayerForm({ id, onboarding }: { id?: string; onboarding?: boole
   if (onboarding)
     return (
       <div className="screen onboarding">
-        <main className="content form">
+        <main className="content form"><div className="content-inner">
           <BrandFull />
           <p className="onb-text">Registrá cada patada a los palos, en práctica o en partido, y mirá desde dónde acertás más.</p>
           {form}
-        </main>
+        </div></main>
       </div>
     )
   return (
@@ -265,7 +265,7 @@ export function PlayerForm({ id, onboarding }: { id?: string; onboarding?: boole
           </button>
         }
       />
-      <main className="content form">{form}</main>
+      <main className="content form"><div className="content-inner">{form}</div></main>
     </div>
   )
 }

@@ -172,3 +172,13 @@ end;
 $$;
 revoke all on function public.email_for_login(text, text) from public;
 grant execute on function public.email_for_login(text, text) to anon, authenticated;
+
+-- ---------- Permisos de las tablas ----------
+-- Los proyectos nuevos de Supabase no dan acceso automático a las tablas creadas por SQL.
+-- Las reglas de seguridad (RLS) de arriba siguen decidiendo qué filas ve y toca cada uno.
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on public.profiles, public.sessions, public.kicks, public.friendships to authenticated;
+grant execute on function public.are_friends(uuid, uuid) to authenticated;
+grant execute on function public.can_view(uuid) to authenticated;
+grant execute on function public.username_available(text) to anon, authenticated;
+grant execute on function public.email_for_login(text, text) to anon, authenticated;

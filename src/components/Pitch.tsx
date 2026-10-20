@@ -24,6 +24,8 @@ interface Props {
   showMarks?: boolean
   compact?: boolean
   labelMode?: 'pct' | 'frac'
+  /** Lupa: centro (en metros) para mostrar la cancha acercada */
+  zoomAt?: { x: number; y: number } | null
 }
 
 const IG = 6 // in-goal visible (m)
@@ -52,7 +54,7 @@ export function viewDepth(pitch: PitchT) {
   return Math.min(pitch.length / 2 + 12, 62)
 }
 
-export default function PitchView({ pitch, marks = [], pending, tryX, tryMode, onTap, onMarkTap, zones, minAttempts = 5, showMarks = true, compact, labelMode = 'frac' }: Props) {
+export default function PitchView({ pitch, marks = [], pending, tryX, tryMode, onTap, onMarkTap, zones, minAttempts = 5, showMarks = true, compact, labelMode = 'frac', zoomAt }: Props) {
   const ref = useRef<SVGSVGElement>(null)
   const W = pitch.width
   const D = viewDepth(pitch)
@@ -63,7 +65,8 @@ export default function PitchView({ pitch, marks = [], pending, tryX, tryMode, o
   function handle(e: React.PointerEvent<SVGSVGElement>) {
     if (!onTap || !ref.current) return
     const target = e.target as Element
-    if (target.closest('[data-mark]')) return
+    // Solo en modo edición las patadas se pueden tocar; si no, se puede patear encima de otra
+    if (onMarkTap && target.closest('[data-mark]')) return
     const pt = ref.current.createSVGPoint()
     pt.x = e.clientX
     pt.y = e.clientY
@@ -76,13 +79,24 @@ export default function PitchView({ pitch, marks = [], pending, tryX, tryMode, o
   }
 
   const dash = '1.2 1.2'
+  // Vista completa o acercada (lupa x2.5 alrededor del punto tocado)
+  const full = { x: -1, y: -IG - 1, w: W + 2, h: D + IG + 2 }
+  let vb = `${full.x} ${full.y} ${full.w} ${full.h}`
+  if (zoomAt) {
+    const z = 2.5
+    const w = full.w / z
+    const h = full.h / z
+    const x = Math.max(full.x, Math.min(full.x + full.w - w, zoomAt.x - w / 2))
+    const y = Math.max(full.y, Math.min(full.y + full.h - h, zoomAt.y - h / 2))
+    vb = `${x.toFixed(2)} ${y.toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)}`
+  }
   const line = { stroke: 'var(--line)', strokeWidth: 0.28, fill: 'none' }
 
   return (
     <svg
       ref={ref}
       className={`pitch${compact ? ' compact' : ''}`}
-      viewBox={`-1 ${-IG - 1} ${W + 2} ${D + IG + 2}`}
+      viewBox={vb}
       preserveAspectRatio="xMidYMid meet"
       onPointerUp={handle}
       role="img"
@@ -170,8 +184,9 @@ export default function PitchView({ pitch, marks = [], pending, tryX, tryMode, o
             <g
               key={m.id}
               data-mark
-              className="mark"
+              className={`mark${onMarkTap ? ' editable' : ''}`}
               opacity={m.dim ? 0.35 : 1}
+              pointerEvents={onMarkTap ? 'auto' : 'none'}
               onPointerUp={(e) => {
                 if (!onMarkTap) return
                 e.stopPropagation()
@@ -179,6 +194,7 @@ export default function PitchView({ pitch, marks = [], pending, tryX, tryMode, o
               }}
             >
               <circle cx={m.x} cy={m.y} r={2.2} fill="transparent" />
+              {onMarkTap && <circle cx={m.x} cy={m.y} r={1.6} fill="none" stroke="var(--try)" strokeWidth={0.25} strokeDasharray="0.6 0.4" />}
               <circle cx={m.x} cy={m.y} r={0.95} fill={good ? 'var(--mark-good)' : 'var(--mark-bad)'} stroke="var(--mark-stroke)" strokeWidth={0.2} />
               {m.result === 'derecha' && <path d={`M${m.x + 1.4} ${m.y}h1.8m-0.7 -0.6l0.7 0.6l-0.7 0.6`} stroke="var(--mark-bad)" strokeWidth={0.3} fill="none" />}
               {m.result === 'izquierda' && <path d={`M${m.x - 1.4} ${m.y}h-1.8m0.7 -0.6l-0.7 0.6l0.7 0.6`} stroke="var(--mark-bad)" strokeWidth={0.3} fill="none" />}

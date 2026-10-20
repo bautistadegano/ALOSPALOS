@@ -94,7 +94,7 @@ export default function SessionForm({ id }: { id?: string }) {
           </button>
         }
       />
-      <main className="content form">
+      <main className="content form"><div className="content-inner">
         {status !== 'idle' && (
           <p className={`status status-${status}`}>
             {status === 'loading' && 'Buscando lugar y clima…'}
@@ -222,7 +222,7 @@ export default function SessionForm({ id }: { id?: string }) {
         <button className="btn-primary wide" disabled={!canSave} onClick={save}>
           {existing ? 'Guardar cambios' : 'Empezar a cargar patadas'}
         </button>
-      </main>
+      </div></main>
     </div>
   )
 }

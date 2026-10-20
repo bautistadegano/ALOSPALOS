@@ -242,7 +242,7 @@ export function FriendProfile({ id }: { id: string }) {
   return (
     <div className="screen">
       <TopBar title={p ? p.name || `@${p.username}` : 'Perfil'} onBack={nav.back} />
-      <main className="content">
+      <main className="content"><div className="content-inner">
         {err && <p className="status error">{err}</p>}
         {!p && !err && <p className="hint">Cargando…</p>}
         {p && (
@@ -332,7 +332,7 @@ export function FriendProfile({ id }: { id: string }) {
             )}
           </div>
         )}
-      </main>
+      </div></main>
     </div>
   )
 }

@@ -3,7 +3,7 @@ import { useStore, uid } from '../store'
 import { useNav, TopBar, Segmented, Sheet, Chips, fmtDate } from '../ui'
 import PitchView from '../components/Pitch'
 import { kickGeometry } from '../geo'
-import { IEdit, ICheck, IRight, ILeft, IDown, IX, ITry, IPost, IPlus, ITrash } from '../icons'
+import { IEdit, ICheck, IRight, ILeft, IDown, IX, ITry, IPost, ITrash, IRepeat, IZoom } from '../icons'
 import { KICK_LABEL, POINTS, RESULT_LABEL, SESSION_LABEL, type Kick, type KickType, type Result } from '../types'
 import { sessionPoints } from '../stats'
 import { windText } from './SessionForm'
@@ -15,7 +15,10 @@ export default function SessionView({ id }: { id: string }) {
   const kicks = useMemo(() => data.kicks.filter((k) => k.sessionId === id).sort((a, b) => a.createdAt - b.createdAt), [data.kicks, id])
   // Cada cuenta es un pateador: en sesiones de ejemplo se usa el jugador de ejemplo
   const playerId = s?.demo ? s.playerIds[0] ?? '' : data.settings.meId ?? s?.playerIds[0] ?? ''
-  const [kickType, setKickType] = useState<KickType>('conversion')
+  const [kickType, setKickType] = useState<KickType>('penal')
+  const [editMode, setEditMode] = useState(false)
+  const [lupa, setLupa] = useState(false)
+  const [zoomAt, setZoomAt] = useState<{ x: number; y: number } | null>(null)
   const [tryMode, setTryMode] = useState(false)
   const [tryX, setTryX] = useState<number | null>(null)
   const [pending, setPending] = useState<{ x: number; y: number } | null>(null)
@@ -39,9 +42,9 @@ export default function SessionView({ id }: { id: string }) {
     return (
       <div className="screen">
         <TopBar title="Sesión" onBack={nav.back} />
-        <main className="content empty">
+        <main className="content empty"><div className="content-inner">
           <p>Esta sesión ya no existe.</p>
-        </main>
+        </div></main>
       </div>
     )
   }
@@ -53,7 +56,12 @@ export default function SessionView({ id }: { id: string }) {
   const useTry = kickType === 'conversion' && tryMode
 
   function onTap(x: number, y: number) {
-    if (!playerId) return
+    if (!playerId || editMode) return
+    // Lupa: el primer toque acerca la zona, el segundo marca el punto exacto
+    if (lupa && !useTry && !zoomAt) {
+      setZoomAt({ x, y })
+      return
+    }
     if (useTry) {
       if (tryX == null) {
         setTryX(x)
@@ -84,6 +92,7 @@ export default function SessionView({ id }: { id: string }) {
     dispatch({ t: 'addKick', k })
     setPending(null)
     setTryX(null)
+    setZoomAt(null)
     setToast({ kick: k, n: kicks.length + 1 })
     window.clearTimeout(toastTimer.current)
     toastTimer.current = window.setTimeout(() => setToast(null), 4500)
@@ -93,11 +102,30 @@ export default function SessionView({ id }: { id: string }) {
   function cancel() {
     setPending(null)
     setTryX(null)
+    setZoomAt(null)
+  }
+
+  // Repetir el lugar de la última patada (muy común en los entrenamientos)
+  const lastKick = [...kicks].reverse().find((k) => k.playerId === playerId)
+  function sameSpot() {
+    if (!lastKick) return
+    setEditMode(false)
+    setZoomAt(null)
+    if (lastKick.tryX != null && lastKick.kickType === 'conversion') {
+      setKickType('conversion')
+      setTryMode(true)
+      setTryX(lastKick.tryX)
+    }
+    setPending({ x: lastKick.x, y: lastKick.y })
   }
 
   const hint = !playerId
     ? 'Completá tu perfil para cargar patadas'
-    : useTry
+    : editMode
+      ? 'Modo edición: tocá una patada para corregirla o borrarla'
+      : lupa && !useTry && !zoomAt
+        ? 'Lupa: tocá la zona para acercarla'
+        : useTry
       ? tryX == null
         ? 'Tocá dónde se apoyó el try'
         : pending
@@ -105,7 +133,9 @@ export default function SessionView({ id }: { id: string }) {
           : 'Tocá sobre la línea desde dónde se patea'
       : pending
         ? 'Elegí el resultado o tocá otro punto'
-        : 'Tocá desde dónde se patea'
+        : zoomAt
+          ? 'Tocá el punto exacto'
+          : 'Tocá desde dónde se patea'
 
   const detailKick = detail ? kicks.find((k) => k.id === detail) : undefined
 
@@ -139,32 +169,69 @@ export default function SessionView({ id }: { id: string }) {
             value={kickType}
             onChange={(v) => {
               setKickType(v)
-              if (v !== 'conversion') setTryX(null)
+              if (v !== 'conversion') {
+                setTryX(null)
+                setTryMode(false)
+              }
             }}
-            options={(['conversion', 'penal', 'drop'] as const).map((t) => ({ value: t, label: KICK_LABEL[t] }))}
+            options={(['penal', 'conversion', 'drop'] as const).map((t) => ({ value: t, label: KICK_LABEL[t] }))}
           />
-          {kickType === 'conversion' && (
-            <button
-              className={`tog${tryMode ? ' on' : ''}`}
-              aria-pressed={tryMode}
-              onClick={() => {
-                setTryMode(!tryMode)
-                cancel()
-              }}
-              title="Modo try: marcás el try y después la distancia sobre su línea"
-            >
-              <ITry size={18} /> Try
-            </button>
-          )}
+          <button
+            className={`tog${useTry ? ' on' : ''}`}
+            aria-pressed={useTry}
+            onClick={() => {
+              // El modo try es para conversiones: la elige sola
+              if (!useTry) {
+                setKickType('conversion')
+                setTryMode(true)
+                setLupa(false)
+              } else setTryMode(false)
+              setEditMode(false)
+              cancel()
+            }}
+            title="Modo try: marcás el try y después la distancia sobre su línea"
+          >
+            <ITry size={18} /> Try
+          </button>
         </div>
-        <div className="match-row">
-          {isMatch && (
-            <Segmented<'1' | '2'> size="sm" label="Tiempo" value={String(half) as '1' | '2'} onChange={(v) => setHalf(Number(v) as 1 | 2)} options={[{ value: '1', label: '1T' }, { value: '2', label: '2T' }]} />
-          )}
+        <div className="pitch-tools">
+          <button className="tog" disabled={!lastKick || editMode} onClick={sameSpot} title="Poner la patada en el mismo lugar que la anterior">
+            <IRepeat size={16} /> Mismo lugar
+          </button>
+          <button
+            className={`tog${lupa ? ' on' : ''}`}
+            aria-pressed={lupa}
+            disabled={useTry || editMode}
+            onClick={() => {
+              setLupa(!lupa)
+              setZoomAt(null)
+            }}
+            title="Lupa: acercar la cancha para marcar el punto exacto"
+          >
+            <IZoom size={16} /> Lupa
+          </button>
+          <button
+            className={`tog${editMode ? ' on' : ''}`}
+            aria-pressed={editMode}
+            disabled={!kicks.length}
+            onClick={() => {
+              setEditMode(!editMode)
+              cancel()
+            }}
+            title="Modo edición: tocar una patada ya cargada para corregirla"
+          >
+            <IEdit size={16} /> {editMode ? 'Listo' : 'Editar'}
+          </button>
           {kickType !== 'drop' && (
             <button className={`tog${tee ? ' on' : ''}`} aria-pressed={tee} onClick={() => setTee(!tee)} title="Con tee o sin tee">
               {tee ? <ICheck size={16} /> : null} Tee
             </button>
+          )}
+        </div>
+        {isMatch && (
+        <div className="match-row">
+          {isMatch && (
+            <Segmented<'1' | '2'> size="sm" label="Tiempo" value={String(half) as '1' | '2'} onChange={(v) => setHalf(Number(v) as 1 | 2)} options={[{ value: '1', label: '1T' }, { value: '2', label: '2T' }]} />
           )}
           {isMatch &&
             (pts ? (
@@ -181,6 +248,7 @@ export default function SessionView({ id }: { id: string }) {
               <span className="points muted">No suma puntos</span>
             ))}
         </div>
+        )}
       </div>
 
       <div className="pitch-wrap">
@@ -191,7 +259,8 @@ export default function SessionView({ id }: { id: string }) {
           tryX={useTry ? tryX : null}
           tryMode={useTry}
           onTap={onTap}
-          onMarkTap={useTry ? undefined : (mid) => !pending && setDetail(mid)}
+          onMarkTap={editMode ? (mid) => setDetail(mid) : undefined}
+          zoomAt={zoomAt}
         />
         <span className="kick-badge">{KICK_LABEL[kickType]}</span>
         {s.windDir != null && (s.windSpeed ?? 0) > 0 && (
@@ -237,7 +306,7 @@ export default function SessionView({ id }: { id: string }) {
             <span>Apertura</span>
             <strong>{geom ? `${geom.postGap.toFixed(1)}°` : '—'}</strong>
           </div>
-          <button className="icon-btn" disabled={!pending && tryX == null} onClick={cancel} aria-label="Cancelar">
+          <button className="icon-btn" disabled={!pending && tryX == null && !zoomAt} onClick={cancel} aria-label="Cancelar">
             <IX />
           </button>
         </div>
@@ -304,7 +373,7 @@ function KickDetail({ kick, pitch, playerName, onChange, onDelete }: { kick: Kic
       <Chips<KickType>
         value={[kick.kickType]}
         onChange={(v) => v[0] && onChange({ ...kick, kickType: v[0] })}
-        options={(Object.keys(KICK_LABEL) as KickType[]).map((r) => ({ value: r, label: KICK_LABEL[r] }))}
+        options={(['penal', 'conversion', 'drop'] as KickType[]).map((r) => ({ value: r, label: KICK_LABEL[r] }))}
       />
       {confirm ? (
         <div className="confirm inline">

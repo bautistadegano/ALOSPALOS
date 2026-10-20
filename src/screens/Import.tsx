@@ -65,7 +65,7 @@ export default function Import() {
   return (
     <div className="screen">
       <TopBar title="Traer patadas" onBack={nav.back} />
-      <main className="content form">
+      <main className="content form"><div className="content-inner">
         {status === 'done' ? (
           <div className="import-done">
             <span className="done-icon">
@@ -139,7 +139,7 @@ export default function Import() {
             )}
           </>
         )}
-      </main>
+      </div></main>
     </div>
   )
 }

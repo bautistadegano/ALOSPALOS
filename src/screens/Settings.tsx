@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react'
 import { useStore } from '../store'
-import { TopBar, Segmented, Switch, Field, NumInput } from '../ui'
-import { ILink, IDownload, IUpload, ITrash } from '../icons'
+import { TopBar, Segmented, Switch, Field, NumInput, Sheet } from '../ui'
+import { sb } from '../cloud'
+import { ILink, IDownload, IUpload, ITrash, IKey, ILogout } from '../icons'
 import { deliver } from '../export'
 import { BrandFull } from '../Brand'
 import { useAuth } from '../auth'
@@ -15,6 +16,7 @@ export default function Settings() {
   const [msg, setMsg] = useState('')
   const auth = useAuth()
   const [confirmOut, setConfirmOut] = useState(false)
+  const [pwOpen, setPwOpen] = useState(false)
   const [confirmDemo, setConfirmDemo] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const hasDemo = data.sessions.some((s) => s.demo) || data.players.some((p) => p.demo)
@@ -63,7 +65,7 @@ export default function Settings() {
   return (
     <div className="screen">
       <TopBar title="Ajustes" />
-      <main className="content form">
+      <main className="content form"><div className="content-inner">
         <div className="group">
           <span className="group-label">Apariencia</span>
           <Segmented<S['theme']>
@@ -125,21 +127,26 @@ export default function Settings() {
                         : ''}
               </span>
             </p>
-            {confirmOut ? (
-              <div className="confirm inline">
-                <span>¿Cerrar sesión en este celular? Tus patadas quedan guardadas en la cuenta.</span>
-                <button className="btn-text" onClick={() => setConfirmOut(false)}>
-                  No
-                </button>
-                <button className="btn-danger" onClick={() => auth.signOut()}>
-                  Cerrar sesión
-                </button>
-              </div>
-            ) : (
-              <button className="list-btn" onClick={() => setConfirmOut(true)}>
-                Cerrar sesión
+            <div className="account-actions">
+              <button className="btn-secondary wide" onClick={() => setPwOpen(true)}>
+                <IKey size={18} /> Cambiar contraseña
               </button>
-            )}
+              {confirmOut ? (
+                <div className="confirm inline">
+                  <span>¿Cerrar sesión en este celular? Tus patadas quedan guardadas en la cuenta.</span>
+                  <button className="btn-text" onClick={() => setConfirmOut(false)}>
+                    No
+                  </button>
+                  <button className="btn-danger" onClick={() => auth.signOut()}>
+                    Cerrar sesión
+                  </button>
+                </div>
+              ) : (
+                <button className="btn-logout wide" onClick={() => setConfirmOut(true)}>
+                  <ILogout size={18} /> Cerrar sesión
+                </button>
+              )}
+            </div>
           </div>
         )}
 
@@ -176,11 +183,57 @@ export default function Settings() {
 
         <BrandFull />
         <p className="about">
-          A los Palos · versión 0.6
+          A los Palos · versión 0.7
           <br />
-          {data.sessions.length} sesiones · {data.kicks.length} patadas · {data.players.length} pateadores
+          {data.sessions.length} {data.sessions.length === 1 ? 'sesión' : 'sesiones'} · {data.kicks.length} patadas · {data.players.length} {data.players.length === 1 ? 'pateador' : 'pateadores'}
         </p>
-      </main>
+      </div></main>
+      <Sheet open={pwOpen} onClose={() => setPwOpen(false)} title="Cambiar contraseña">
+        <ChangePassword onDone={() => setPwOpen(false)} />
+      </Sheet>
     </div>
+  )
+}
+
+function ChangePassword({ onDone }: { onDone: () => void }) {
+  const [p1, setP1] = useState('')
+  const [p2, setP2] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState('')
+  const [ok, setOk] = useState(false)
+  const mismatch = p2.length > 0 && p1 !== p2
+  async function save() {
+    setBusy(true)
+    setMsg('')
+    const { error } = await sb!.auth.updateUser({ password: p1 })
+    setBusy(false)
+    if (error) {
+      setMsg(/different from the old/i.test(error.message) ? 'La contraseña nueva tiene que ser distinta de la anterior.' : /fetch/i.test(error.message) ? 'No hay conexión. Probá de nuevo con señal.' : error.message)
+      return
+    }
+    setOk(true)
+    setTimeout(onDone, 1500)
+  }
+  if (ok) return <p className="status ok">Listo, cambiaste la contraseña.</p>
+  return (
+    <form
+      className="auth-form"
+      onSubmit={(e) => {
+        e.preventDefault()
+        save()
+      }}
+    >
+      <Field label="Contraseña nueva">
+        <input id="cp-1" type="password" autoComplete="new-password" value={p1} onChange={(e) => setP1(e.target.value)} placeholder="Mínimo 6 caracteres" />
+      </Field>
+      <Field label="Repetí la contraseña">
+        <input id="cp-2" type="password" autoComplete="new-password" value={p2} onChange={(e) => setP2(e.target.value)} placeholder="Ingresá la contraseña de nuevo" />
+      </Field>
+      {mismatch && <p className="status error">Las contraseñas no coinciden.</p>}
+      {msg && <p className="status error">{msg}</p>}
+      <button className="btn-primary wide" disabled={busy || p1.length < 6 || p1 !== p2}>
+        {busy ? 'Guardando…' : 'Guardar contraseña'}
+      </button>
+    </form>
   )
 }

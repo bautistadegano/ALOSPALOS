@@ -44,7 +44,7 @@ export default function Report() {
   return (
     <div className="screen">
       <TopBar title="Informe" onBack={nav.back} />
-      <main className="content form">
+      <main className="content form"><div className="content-inner">
         <div className="group">
           <span className="group-label">Qué patadas</span>
           <Segmented<Scope> label="Qué patadas" value={scope} onChange={setScope} options={(['piso', 'drop', 'todas'] as const).map((v) => ({ value: v, label: SCOPE_LABEL[v] }))} />
@@ -76,7 +76,7 @@ export default function Report() {
         <div ref={mapRef} className="offscreen" aria-hidden="true">
           <PitchView pitch={ref} compact zones={sum.zones} minAttempts={f.minAttempts} labelMode={f.zoneLabel} marks={ks.map((k) => ({ id: k.kick.id, x: ref.width / 2 + k.dx, y: k.y, result: k.result }))} />
         </div>
-      </main>
+      </div></main>
     </div>
   )
 }

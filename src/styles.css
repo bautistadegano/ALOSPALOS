@@ -55,7 +55,7 @@
   :root:not([data-theme='dark']) {
     --page-bg: repeating-linear-gradient(180deg, #521020 0 46px, #121012 46px 56px, #ffffff 56px 96px, #121012 96px 104px);
     --bg: #fbf7f7;
-    --panel-bg: rgba(251, 247, 247, 0.95);
+    --panel-bg: rgba(251, 247, 247, 0.97);
     --panel-margin: 10px;
     --panel-radius: 18px;
     --surface: #ffffff;
@@ -94,7 +94,7 @@
 :root[data-theme='light'] {
   --page-bg: repeating-linear-gradient(180deg, #521020 0 46px, #121012 46px 56px, #ffffff 56px 96px, #121012 96px 104px);
   --bg: #fbf7f7;
-  --panel-bg: rgba(251, 247, 247, 0.95);
+  --panel-bg: rgba(251, 247, 247, 0.97);
   --panel-margin: 10px;
   --panel-radius: 18px;
   --surface: #ffffff;
@@ -212,20 +212,32 @@ h3 {
 }
 .content {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  /* rebote natural al llegar arriba o abajo */
+  overscroll-behavior-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 4px 96px;
+  padding-block: 4px calc(48px + env(safe-area-inset-bottom, 0px));
+}
+/* Siempre un poquito más alto que la pantalla: así se puede deslizar aunque haya poco */
+.content-inner {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  -webkit-overflow-scrolling: touch;
+  min-height: calc(100% + 1px);
 }
-.content > * {
+.content-inner > * {
   flex-shrink: 0;
 }
+/* Que lo último no quede tapado por la barra de abajo ni por el botón + */
 .with-tabs .content {
-  padding-bottom: 110px;
+  padding-bottom: calc(150px + env(safe-area-inset-bottom, 0px));
+}
+html,
+body {
+  overflow: hidden;
 }
 
 /* Barra superior */
@@ -484,7 +496,7 @@ h3 {
 }
 
 /* Formularios */
-.form {
+.form > .content-inner {
   gap: 16px;
 }
 .group {
@@ -1600,8 +1612,6 @@ h3 {
   margin-left: var(--panel-margin);
   margin-right: var(--panel-margin);
   border-radius: var(--panel-radius) var(--panel-radius) 0 0;
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
 }
 .kick-body {
   flex: 1;
@@ -2071,7 +2081,7 @@ h3 {
   text-align: center;
   color: var(--muted);
 }
-.splash {
+.splash > .content-inner {
   justify-content: center;
 }
 .account-line {
@@ -2169,4 +2179,32 @@ h3 {
 }
 .fixed-user strong {
   font-size: 17px;
+}
+
+.pitch-tools {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.pitch-tools .tog:disabled {
+  opacity: 0.4;
+}
+.btn-logout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 20px;
+  border-radius: 999px;
+  font-weight: 600;
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  background: transparent;
+}
+.account-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 4px;
 }

@@ -32,7 +32,7 @@ export default function Analysis() {
           </button>
         }
       />
-      <main className="content">
+      <main className="content"><div className="content-inner">
         <Segmented<Scope> label="Qué patadas" value={filter.scope} onChange={(scope) => set({ scope, kickTypes: [] })} options={(['piso', 'drop', 'todas'] as const).map((v) => ({ value: v, label: SCOPE_LABEL[v] }))} />
         <div className="filter-row">
           <button className={`chip${nActive ? ' on' : ''}`} onClick={() => setSheet(true)}>
@@ -102,7 +102,7 @@ export default function Analysis() {
         ) : (
           <Trend ks={ks} />
         )}
-      </main>
+      </div></main>
 
       <Sheet open={sheet} onClose={() => setSheet(false)} title="Filtros">
         <FilterForm filter={filter} onChange={setFilter} />

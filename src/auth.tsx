@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { User } from '@supabase/supabase-js'
-import { sb, cloudEnabled, fetchProfile, profileToPlayer, saveProfile, pushChanges, pullUser, mergeCloud, clearSnap, type ProfileRow, type Visibility } from './cloud'
+import { sb, cloudEnabled, initialUrl, fetchProfile, profileToPlayer, saveProfile, pushChanges, pullUser, mergeCloud, clearSnap, type ProfileRow, type Visibility } from './cloud'
 import { useStore, reducer } from './store'
 import type { Player, Settings } from './types'
 
@@ -57,10 +57,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ;(async () => {
       // Links de los mails: ?token_hash=...&type=signup|recovery|email
       // La verificación la hace la app (no el link), así los antivirus de los mails no "gastan" el link.
-      const url = new URL(location.href)
-      const tokenHash = url.searchParams.get('token_hash')
-      const type = url.searchParams.get('type') as 'signup' | 'email' | 'recovery' | 'invite' | 'email_change' | null
-      const hash = new URLSearchParams(location.hash.replace(/^#/, ''))
+      const params = new URLSearchParams(initialUrl.search)
+      const tokenHash = params.get('token_hash')
+      const type = params.get('type') as 'signup' | 'email' | 'recovery' | 'invite' | 'email_change' | null
+      const hash = new URLSearchParams(initialUrl.hash.replace(/^#/, ''))
+      // Links con el formato viejo de Supabase (#access_token=...&type=recovery)
+      if (hash.get('type') === 'recovery' && hash.get('access_token')) setRecovering(true)
       const clean = () => {
         try {
           history.replaceState(null, '', location.pathname)

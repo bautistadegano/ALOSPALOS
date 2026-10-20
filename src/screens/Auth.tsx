@@ -40,6 +40,10 @@ export default function AuthScreen() {
     const t = window.setTimeout(() => setCooldown((c) => c - 1), 1000)
     return () => window.clearTimeout(t)
   }, [cooldown])
+  useEffect(() => {
+    if (auth.recovering) setMode('newpass')
+  }, [auth.recovering])
+  const [pass2, setPass2] = useState('')
   const unameOk = /^[a-z0-9._]{3,20}$/.test(username)
   const redirect = typeof location !== 'undefined' ? location.origin + location.pathname : undefined
 
@@ -72,6 +76,7 @@ export default function AuthScreen() {
     run(async () => {
       if (!unameOk) throw new Error('El nombre de usuario tiene que tener entre 3 y 20 caracteres: letras, números, punto o guion bajo.')
       if (!name.trim()) throw new Error('Poné tu nombre o apodo.')
+      if (pass !== pass2) throw new Error('Las contraseñas no coinciden.')
       if (!(await usernameAvailable(username))) throw new Error(`@${username} ya está usado. Probá con otro.`)
       const { data, error } = await sb!.auth.signUp({
         email: email.trim(),
@@ -113,11 +118,18 @@ export default function AuthScreen() {
   const newpass = () =>
     run(async () => {
       if (pass.length < 6) throw new Error('La contraseña tiene que tener al menos 6 caracteres.')
+      if (pass !== pass2) throw new Error('Las contraseñas no coinciden.')
       const { error } = await sb!.auth.updateUser({ password: pass })
-      if (error) throw error
+      if (error) throw new Error(/different from the old/i.test(error.message) ? 'La contraseña nueva tiene que ser distinta de la anterior.' : error.message)
       auth.doneRecovering()
     })
 
+  const pass2Field = (
+    <Field label="Repetí la contraseña">
+      <input id="au-pass2" type="password" autoComplete="new-password" value={pass2} onChange={(e) => setPass2(e.target.value)} placeholder="Ingresá la contraseña de nuevo" />
+    </Field>
+  )
+  const mismatch = pass2.length > 0 && pass !== pass2
   const emailField = (
     <Field label="Mail">
       <input id="au-email" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Ingresá tu mail" />
@@ -138,7 +150,7 @@ export default function AuthScreen() {
 
   return (
     <div className="screen onboarding">
-      <main className="content form">
+      <main className="content form"><div className="content-inner">
         <BrandFull />
         {auth.notice && (
           <p className={`notice-line${/confirmado/.test(auth.notice) ? ' ok' : ''}`}>
@@ -232,8 +244,10 @@ export default function AuthScreen() {
             </div>
             {emailField}
             {passField('Contraseña', 'new-password')}
+            {pass2Field}
+            {mismatch && <p className="status error">Las contraseñas no coinciden.</p>}
             {error && <p className="status error">{error}</p>}
-            <button className="btn-primary wide" disabled={busy || !email || pass.length < 6 || !unameOk || !name.trim()}>
+            <button className="btn-primary wide" disabled={busy || !email || pass.length < 6 || pass !== pass2 || !unameOk || !name.trim()}>
               {busy ? 'Creando…' : 'Crear cuenta'}
             </button>
             <p className="auth-switch">
@@ -304,13 +318,15 @@ export default function AuthScreen() {
           >
             <h2 className="auth-title">Contraseña nueva</h2>
             {passField('Contraseña nueva', 'new-password')}
+            {pass2Field}
+            {mismatch && <p className="status error">Las contraseñas no coinciden.</p>}
             {error && <p className="status error">{error}</p>}
-            <button className="btn-primary wide" disabled={busy || pass.length < 6}>
+            <button className="btn-primary wide" disabled={busy || pass.length < 6 || pass !== pass2}>
               Guardar
             </button>
           </form>
         )}
-      </main>
+      </div></main>
     </div>
   )
 }

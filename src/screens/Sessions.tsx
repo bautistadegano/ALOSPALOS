@@ -26,7 +26,7 @@ export default function Sessions() {
   return (
     <div className="screen">
       <BrandHeader />
-      <main className="content">
+      <main className="content"><div className="content-inner">
         {hasDemo && (
           <div className="notice">
             <p>
@@ -116,7 +116,7 @@ export default function Sessions() {
             </section>
           )
         })}
-      </main>
+      </div></main>
       <button className="fab" aria-label="Nueva sesión" onClick={() => nav.push({ name: 'sessionForm' })}>
         <IPlus size={26} />
       </button>

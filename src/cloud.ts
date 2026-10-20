@@ -8,6 +8,10 @@ const KEY =
   import.meta.env.VITE_SUPABASE_ANON_KEY ||
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNlbWhlZHpwcmpxYnBtbWhueW91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI0MzE0MDgsImV4cCI6MjEwODAwNzQwOH0.k6ox-o-iJ8geKtbmgv3Ns-izRpjwoOO2WbKcAwNMUkA'
 
+/** Lo que trae la dirección al abrir (los links de los mails). Se guarda ANTES de crear el
+ *  cliente de Supabase, porque Supabase la limpia al leerla. */
+export const initialUrl = typeof location !== 'undefined' ? { search: location.search, hash: location.hash } : { search: '', hash: '' }
+
 /** En la vista previa de Claude no hay salida a internet: la app funciona solo en el celular */
 export const cloudEnabled = import.meta.env.MODE !== 'single'
 

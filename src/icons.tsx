@@ -20,6 +20,10 @@ const S = ({ size = 22, className, children }: P & { children: React.ReactNode }
 
 export const IBack = (p: P) => <S {...p}><path d="M15 5l-7 7 7 7" /></S>
 export const IChevron = (p: P) => <S {...p}><path d="M9 5l7 7-7 7" /></S>
+export const IRepeat = (p: P) => <S {...p}><path d="M17 2l4 4-4 4" /><path d="M3 11V9a3 3 0 013-3h15M7 22l-4-4 4-4" /><path d="M21 13v2a3 3 0 01-3 3H3" /></S>
+export const IZoom = (p: P) => <S {...p}><circle cx="10.5" cy="10.5" r="6.5" /><path d="M15.5 15.5L21 21M10.5 7.5v6M7.5 10.5h6" /></S>
+export const IKey = (p: P) => <S {...p}><circle cx="8" cy="15" r="4" /><path d="M11 12l9-9M16 7l3 3M14 9l2 2" /></S>
+export const ILogout = (p: P) => <S {...p}><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h11" /></S>
 export const IPlus = (p: P) => <S {...p}><path d="M12 5v14M5 12h14" /></S>
 export const IEdit = (p: P) => <S {...p}><path d="M4 20h4L19 9l-4-4L4 16v4z" /><path d="M13.5 6.5l4 4" /></S>
 export const ITrash = (p: P) => <S {...p}><path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12" /></S>

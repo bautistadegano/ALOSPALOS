@@ -66,7 +66,7 @@ export default function Misses() {
   return (
     <div className="screen">
       <TopBar title="Cuando errás" onBack={nav.back} />
-      <main className="content">
+      <main className="content"><div className="content-inner">
         <Segmented<Scope> label="Qué patadas" value={filter.scope} onChange={(scope) => setFilter({ ...filter, scope, kickTypes: [] })} options={(['piso', 'drop', 'todas'] as const).map((v) => ({ value: v, label: SCOPE_LABEL[v] }))} />
         <div className="filter-row">
           <button className={`chip${activeFilterCount(filter) ? ' on' : ''}`} onClick={() => setSheet(true)}>
@@ -178,7 +178,7 @@ export default function Misses() {
             <p className="hint">Los porcentajes de cada error son sobre el total de errores de ese lado.</p>
           </div>
         </div>
-      </main>
+      </div></main>
       <Sheet open={sheet} onClose={() => setSheet(false)} title="Filtros">
         <FilterForm filter={filter} onChange={setFilter} />
         <div className="sheet-actions">
