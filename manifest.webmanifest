@@ -1,0 +1,15 @@
+{
+  "name": "A los Palos",
+  "short_name": "A los Palos",
+  "description": "Registro de patadas a los palos para pateadores de rugby",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#2a0a12",
+  "theme_color": "#521020",
+  "lang": "es-AR",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
