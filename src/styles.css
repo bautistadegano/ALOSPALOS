@@ -139,6 +139,16 @@ body,
 #root {
   height: 100%;
 }
+/* iOS 26.0 calcula mal el alto en las apps agregadas al inicio: se usa el alto real de la pantalla */
+@supports (height: 100lvh) {
+  @media (display-mode: standalone) {
+    html,
+    body,
+    #root {
+      height: 100lvh;
+    }
+  }
+}
 /* La altura incluye el margen de seguridad del celular (notch / barra de estado) */
 html {
   box-sizing: border-box;
@@ -198,6 +208,7 @@ h3 {
 
 .app {
   height: 100%;
+  position: relative;
   display: flex;
   flex-direction: column;
   max-width: 640px;
@@ -233,7 +244,7 @@ h3 {
 }
 /* Que lo último no quede tapado por la barra de abajo ni por el botón + */
 .with-tabs .content {
-  padding-bottom: calc(150px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: 96px;
 }
 html,
 body {
@@ -361,10 +372,8 @@ body {
 /* Pestañas */
 .tabbar {
   background: var(--tab-bg) !important;
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  position: relative;
+  flex: none;
   z-index: 5;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -372,23 +381,22 @@ body {
   border-top: 1px solid var(--border);
   padding-left: max(8px, env(safe-area-inset-left, 0px));
   padding-right: max(8px, env(safe-area-inset-right, 0px));
-  padding-top: 8px;
-  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
-  max-width: 640px;
-  margin: 0 auto;
+  /* bien abajo: aprovecha parte de la zona de la barrita del iPhone */
+  padding-top: 5px;
+  padding-bottom: max(6px, calc(env(safe-area-inset-bottom, 0px) - 14px));
 }
 .tabbar button {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  font-size: 12px;
+  gap: 2px;
+  font-size: 11.5px;
   color: var(--muted);
-  padding: 2px 0;
+  padding: 0;
 }
 .tab-icon {
-  width: 60px;
-  height: 32px;
+  width: 56px;
+  height: 28px;
   border-radius: 999px;
   display: grid;
   place-items: center;
@@ -402,11 +410,11 @@ body {
   color: var(--tab-on-fg);
 }
 .fab {
-  position: fixed;
-  right: max(18px, calc((100vw - 640px) / 2 + 18px), env(safe-area-inset-right, 0px));
-  bottom: calc(92px + env(safe-area-inset-bottom, 0px));
-  width: 60px;
-  height: 60px;
+  position: absolute;
+  right: max(18px, env(safe-area-inset-right, 0px));
+  bottom: 18px;
+  width: 58px;
+  height: 58px;
   border-radius: 18px;
   background: var(--accent);
   color: var(--accent-ink);
@@ -415,9 +423,7 @@ body {
   box-shadow: var(--shadow);
   z-index: 6;
 }
-.screen:not(:has(+ .tabbar)) .fab {
-  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
-}
+
 
 /* Segmentado y chips */
 .seg {
@@ -2207,4 +2213,209 @@ body {
   flex-direction: column;
   gap: 10px;
   padding-top: 4px;
+}
+
+/* Instalar en el inicio */
+.install-strip {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px max(16px, env(safe-area-inset-right, 0px)) 8px max(16px, env(safe-area-inset-left, 0px));
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 13px;
+  text-align: left;
+}
+.install-strip strong {
+  white-space: nowrap;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.install-overlay,
+.tut-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(10, 2, 5, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  overflow-y: auto;
+}
+.install-card,
+.tut-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface);
+  color: var(--fg);
+  border-radius: 22px;
+  padding: 24px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: var(--shadow);
+  margin: auto;
+}
+.install-card {
+  align-items: center;
+  text-align: center;
+}
+.install-card h2,
+.tut-card h2 {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 600;
+}
+.install-lead {
+  margin: 0;
+  color: var(--muted);
+}
+.install-warn {
+  margin: 0;
+  font-size: 14px;
+  background: var(--accent-soft);
+  border-radius: 12px;
+  padding: 10px 12px;
+  text-align: left;
+}
+.install-steps {
+  margin: 4px 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: paso;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+  width: 100%;
+}
+.install-steps li {
+  counter-increment: paso;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  font-size: 15px;
+  padding-left: 38px;
+  position: relative;
+  min-height: 28px;
+}
+.install-steps li::before {
+  content: counter(paso);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+}
+.ios-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+/* Tutorial */
+.tut-card {
+  position: relative;
+}
+.tut-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+.tut-step {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.tut-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+}
+.tut-visual {
+  min-height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tut-visual .pitch {
+  width: 100%;
+  max-width: 300px;
+  height: auto;
+  aspect-ratio: 72 / 70;
+  border-radius: 10px;
+}
+.tut-fab {
+  width: 84px;
+  height: 84px;
+  border-radius: 24px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  display: grid;
+  place-items: center;
+  box-shadow: var(--shadow);
+}
+.tut-tools {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 15px;
+  text-align: left;
+}
+.tut-tools li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.tut-tools svg {
+  flex: none;
+  color: var(--accent);
+  margin-top: 1px;
+}
+.tut-dots {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+.tut-dots span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--border);
+}
+.tut-dots span.on {
+  background: var(--accent);
+  width: 18px;
+  border-radius: 4px;
+}
+.tut-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+a.btn-secondary {
+  text-decoration: none;
 }

@@ -2,12 +2,18 @@ import { useRef, useState } from 'react'
 import { useStore } from '../store'
 import { TopBar, Segmented, Switch, Field, NumInput, Sheet } from '../ui'
 import { sb } from '../cloud'
-import { ILink, IDownload, IUpload, ITrash, IKey, ILogout } from '../icons'
+import { ILink, IDownload, IUpload, ITrash, IKey, ILogout, IChat } from '../icons'
 import { deliver } from '../export'
 import { BrandFull } from '../Brand'
 import { useAuth } from '../auth'
 import { ImportCard } from './Import'
 import type { Data, Settings as S } from '../types'
+
+const VERSION = '0.8'
+function feedbackLink() {
+  const text = `Hola Bauti, te escribo por A los Palos (versión ${VERSION}).\n\nQué pasó o qué se me ocurre:\n\n\n— Celular: ${navigator.userAgent.match(/\(([^)]+)\)/)?.[1] ?? 'desconocido'}`
+  return `https://wa.me/5491136261416?text=${encodeURIComponent(text)}`
+}
 
 export default function Settings() {
   const { data, dispatch } = useStore()
@@ -181,9 +187,20 @@ export default function Settings() {
           {msg && <p className="status">{msg}</p>}
         </div>
 
+        <div className="group">
+          <span className="group-label">Ayuda</span>
+          <button className="btn-secondary wide" onClick={() => window.dispatchEvent(new Event('alospalos:tutorial'))}>
+            Ver cómo se usa la app
+          </button>
+          <a className="btn-secondary wide" href={feedbackLink()} target="_blank" rel="noreferrer">
+            <IChat size={18} /> Reportar un problema o sugerir algo
+          </a>
+          <p className="hint">Se abre WhatsApp con un mensaje para Bauti, que hizo la app. Contá qué pasó y, si podés, mandá una captura.</p>
+        </div>
+
         <BrandFull />
         <p className="about">
-          A los Palos · versión 0.7
+          A los Palos · versión {VERSION}
           <br />
           {data.sessions.length} {data.sessions.length === 1 ? 'sesión' : 'sesiones'} · {data.kicks.length} patadas · {data.players.length} {data.players.length === 1 ? 'pateador' : 'pateadores'}
         </p>

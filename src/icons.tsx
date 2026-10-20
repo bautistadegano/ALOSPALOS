@@ -24,6 +24,7 @@ export const IRepeat = (p: P) => <S {...p}><path d="M17 2l4 4-4 4" /><path d="M3
 export const IZoom = (p: P) => <S {...p}><circle cx="10.5" cy="10.5" r="6.5" /><path d="M15.5 15.5L21 21M10.5 7.5v6M7.5 10.5h6" /></S>
 export const IKey = (p: P) => <S {...p}><circle cx="8" cy="15" r="4" /><path d="M11 12l9-9M16 7l3 3M14 9l2 2" /></S>
 export const ILogout = (p: P) => <S {...p}><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h11" /></S>
+export const IChat = (p: P) => <S {...p}><path d="M4 19l1.5-4A8 8 0 1112 20a8 8 0 01-3.6-.9z" /><path d="M9 11h6M9 14h4" /></S>
 export const IPlus = (p: P) => <S {...p}><path d="M12 5v14M5 12h14" /></S>
 export const IEdit = (p: P) => <S {...p}><path d="M4 20h4L19 9l-4-4L4 16v4z" /><path d="M13.5 6.5l4 4" /></S>
 export const ITrash = (p: P) => <S {...p}><path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12" /></S>

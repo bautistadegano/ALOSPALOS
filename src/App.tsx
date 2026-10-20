@@ -10,6 +10,7 @@ import { useStore } from './store'
 import { useAuth } from './auth'
 import AuthScreen from './screens/Auth'
 import { BrandFull } from './Brand'
+import { InstallGate, Tutorial, tutorialPending } from './Guide'
 import Settings from './screens/Settings'
 import Report from './screens/Report'
 import Misses from './screens/Misses'
@@ -92,6 +93,12 @@ export default function App() {
   )
 
   const { data } = useStore()
+  const [showTut, setShowTut] = useState(tutorialPending)
+  useEffect(() => {
+    const open = () => setShowTut(true)
+    window.addEventListener('alospalos:tutorial', open)
+    return () => window.removeEventListener('alospalos:tutorial', open)
+  }, [])
   const top = stack[stack.length - 1]
   const tabRoute = stack.find((r) => r.name === 'tabs') as { name: 'tabs'; tab: Tab }
   const setTab = (tab: Tab) => setStack((s) => s.map((r) => (r.name === 'tabs' ? { name: 'tabs', tab } : r)))
@@ -138,7 +145,10 @@ export default function App() {
       )
     return (
       <NavCtx.Provider value={nav}>
-        <div className="app">{body}</div>
+        <div className="app">
+          <InstallGate />
+          {body}
+        </div>
       </NavCtx.Provider>
     )
   }
@@ -147,6 +157,7 @@ export default function App() {
     return (
       <NavCtx.Provider value={nav}>
         <div className="app">
+          <InstallGate />
           <PlayerForm onboarding />
         </div>
       </NavCtx.Provider>
@@ -157,7 +168,9 @@ export default function App() {
     <NavCtx.Provider value={nav}>
       <FilterCtx.Provider value={{ filter, setFilter }}>
         <div className={`app${top.name === 'tabs' ? ' with-tabs' : ''}`}>
+          <InstallGate />
           {screen}
+          {showTut && <Tutorial onClose={() => setShowTut(false)} />}
           {top.name === 'tabs' && (
             <nav className="tabbar" aria-label="Secciones">
               {TABS.map((t) => (
